@@ -570,7 +570,6 @@ int emm_proc_attach_complete (
   nas_emm_attach_proc_t                  *attach_proc = NULL;
   int                                     rc = RETURNerror;
   emm_sap_t                               emm_sap = {0};
-  esm_sap_t                               esm_sap = {0};
 
 
 
@@ -596,11 +595,6 @@ int emm_proc_attach_complete (
        * Forward the Activate Default EPS Bearer Context Accept message
        * to the EPS session management sublayer
        */
-      esm_sap.primitive = ESM_DEFAULT_EPS_BEARER_CONTEXT_ACTIVATE_CNF;
-      esm_sap.is_standalone = false;
-      esm_sap.ue_id = ue_id;
-      esm_sap.recv = esm_msg_pP;
-      esm_sap.ctx = &ue_mm_context->emm_context;
       MessageDef *esm_sap_msg_p = itti_alloc_new_message(TASK_EMM_SAP, ESM_SAP_TEST);
 	ESM_DATA_IND(esm_sap_msg_p ).primitive =  ESM_DEFAULT_EPS_BEARER_CONTEXT_ACTIVATE_CNF;
 	ESM_DATA_IND(esm_sap_msg_p).is_standalone =  false;
@@ -611,7 +605,6 @@ int emm_proc_attach_complete (
 
 
       printf("Get attach message, forward the active default EPS Bearers context accept message to eps session management sublayer---wluhan\n");
-      //rc = esm_sap_send (&esm_sap);
     } else {
       NOT_REQUIREMENT_3GPP_24_301(R10_5_5_1_2_4__20);
       OAILOG_INFO (LOG_NAS_EMM, "UE " MME_UE_S1AP_ID_FMT " ATTACH COMPLETE discarded (EMM procedure not found)\n", ue_id);
@@ -637,17 +630,18 @@ int emm_proc_attach_complete (
     emm_sap.u.emm_reg.free_proc = true;
     emm_sap.u.emm_reg.u.attach.proc = attach_proc;
     rc = emm_sap_send (&emm_sap);
-  } else if (esm_sap.err != ESM_SAP_DISCARDED) {
-    /*
-     * Notify EMM that attach procedure failed
-     */
-    emm_sap.primitive = EMMREG_ATTACH_REJ;
-    emm_sap.u.emm_reg.ue_id = ue_id;
-    emm_sap.u.emm_reg.ctx = &ue_mm_context->emm_context;
-    emm_sap.u.emm_reg.notify = true;
-    emm_sap.u.emm_reg.free_proc = true;
-    emm_sap.u.emm_reg.u.attach.proc = attach_proc;
-    rc = emm_sap_send (&emm_sap);
+  //the following lines should be reserved
+ // } else if (esm_sap.err != ESM_SAP_DISCARDED) {
+ //   /*
+ //    * Notify EMM that attach procedure failed
+ //    */
+ //   emm_sap.primitive = EMMREG_ATTACH_REJ;
+ //   emm_sap.u.emm_reg.ue_id = ue_id;
+ //   emm_sap.u.emm_reg.ctx = &ue_mm_context->emm_context;
+ //   emm_sap.u.emm_reg.notify = true;
+ //   emm_sap.u.emm_reg.free_proc = true;
+ //   emm_sap.u.emm_reg.u.attach.proc = attach_proc;
+ //   rc = emm_sap_send (&emm_sap);
   } else {
     /*
      * ESM procedure failed and, received message has been discarded or
@@ -1215,14 +1209,6 @@ static int _emm_attach (emm_context_t *emm_context)
        */
       MSC_LOG_TX_MESSAGE (MSC_NAS_EMM_MME, MSC_NAS_ESM_MME, NULL, 0, "0 ESM_PDN_CONNECTIVITY_REQ ue id " MME_UE_S1AP_ID_FMT " ", ue_id);
 
-      esm_sap_t          esm_sap = {0};
-      esm_sap.primitive = ESM_UNITDATA_IND;
-      esm_sap.is_standalone = false;
-      esm_sap.ue_id = ue_id;
-      esm_sap.ctx = emm_context;
-      esm_sap.recv = attach_proc->ies->esm_msg;
-     // rc = esm_sap_send (&esm_sap);
-
       MessageDef *esm_sap_msg_p = itti_alloc_new_message(TASK_EMM_SAP, ESM_SAP_TEST);
 	ESM_DATA_IND(esm_sap_msg_p ).primitive =  ESM_UNITDATA_IND;
 	ESM_DATA_IND(esm_sap_msg_p).is_standalone =  false;
@@ -1234,7 +1220,8 @@ static int _emm_attach (emm_context_t *emm_context)
      // if ((rc != RETURNerror) && (esm_sap.err == ESM_SAP_SUCCESS)) {
      	if(1){
         rc = RETURNok;
-      } else if (esm_sap.err != ESM_SAP_DISCARDED) {
+     // } else if (esm_sap.err != ESM_SAP_DISCARDED) {
+      } else if (1) {//should be changed to origin
         /*
          * The attach procedure failed due to an ESM procedure failure
          */
@@ -1245,7 +1232,7 @@ static int _emm_attach (emm_context_t *emm_context)
          * message within the Attach Reject message
          */
         bdestroy_wrapper (&attach_proc->ies->esm_msg);
-        attach_proc->esm_msg_out = esm_sap.send;
+       // attach_proc->esm_msg_out = esm_sap.send;//should be uncommented
         rc = _emm_attach_reject (emm_context, &attach_proc->emm_spec_proc.emm_proc.base_proc);
       } else {
         /*

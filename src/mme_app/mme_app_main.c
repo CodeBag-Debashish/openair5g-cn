@@ -50,8 +50,6 @@
 #include "mme_app_statistics.h"
 #include "common_defs.h"
 #include "mme_app_edns_emulation.h"
-#include "nas_proc.h"
-#include "esm_sap.h"
 mme_app_desc_t                          mme_app_desc = {.rw_lock = PTHREAD_RWLOCK_INITIALIZER, 0} ;
 
 void     *mme_app_thread (void *args);
@@ -314,10 +312,10 @@ int mme_app_init (const mme_config_t * mme_config_p)
   }
   /*Create ESM SAP thread*/
 
-  if (itti_create_task (TASK_ESM_SAP, &esm_sap_message_process, NULL) < 0) {
-      OAILOG_ERROR (LOG_MME_APP, "TASK ESM SAP create task failed\n");
-      OAILOG_FUNC_RETURN (LOG_MME_APP, RETURNerror);
-    }
+//  if (itti_create_task (TASK_ESM_SAP, &esm_sap_message_process, NULL) < 0) {
+//      OAILOG_ERROR (LOG_MME_APP, "TASK ESM SAP create task failed\n");
+//      OAILOG_FUNC_RETURN (LOG_MME_APP, RETURNerror);
+//    }
 
 
   /*

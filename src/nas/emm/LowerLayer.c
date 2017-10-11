@@ -296,18 +296,11 @@ int lowerlayer_release (mme_ue_s1ap_id_t ue_id, int cause)
  ***************************************************************************/
 int lowerlayer_data_ind (mme_ue_s1ap_id_t ue_id, const_bstring    data)
 {
-  esm_sap_t                               esm_sap = {0};
   int                                     rc = RETURNok;
 
   OAILOG_FUNC_IN (LOG_NAS_EMM);
 
   ue_mm_context_t *ue_mm_context = mme_ue_context_exists_mme_ue_s1ap_id (&mme_app_desc.mme_ue_contexts, ue_id);
-  esm_sap.primitive = ESM_UNITDATA_IND;
-  esm_sap.is_standalone = true;
-  esm_sap.ue_id = ue_id;
-  esm_sap.ctx = &ue_mm_context->emm_context;
-  esm_sap.recv = data;
-  //rc = esm_sap_send (&esm_sap);
 
   MessageDef *esm_sap_msg_p = itti_alloc_new_message(TASK_EMM_SAP, ESM_SAP_TEST);
   ESM_DATA_IND(esm_sap_msg_p ).primitive = ESM_UNITDATA_IND ;

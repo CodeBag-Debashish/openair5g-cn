@@ -46,6 +46,8 @@
 #include "nas_proc.h"
 #include "emm_main.h"
 #include "nas_timer.h"
+#include "nas_proc.h"
+#include "esm_sap.h"
 
 static void nas_exit(void);
 
@@ -156,6 +158,11 @@ int nas_init (mme_config_t * mme_config_p)
     OAILOG_DEBUG (LOG_NAS, "Initializing NAS task interface: FAILED\n");
     return -1;
   }
+  if (itti_create_task (TASK_ESM_SAP, &esm_sap_message_process, NULL) < 0) {
+    OAILOG_ERROR (LOG_NAS, "TASK ESM SAP create task failed\n");
+    OAILOG_FUNC_RETURN (LOG_NAS, RETURNerror);
+    }
+
 
   OAILOG_DEBUG (LOG_NAS, "Initializing NAS task interface: DONE\n");
   return 0;

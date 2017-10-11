@@ -96,16 +96,9 @@ _clear_emm_ctxt(emm_context_t *emm_context) {
 
   nas_delete_all_emm_procedures(emm_context);
   
-  esm_sap_t                               esm_sap = {0};
-  /* 
-   * Release ESM PDN and bearer context
-   */
-
-  esm_sap.primitive = ESM_EPS_BEARER_CONTEXT_DEACTIVATE_REQ;
-  esm_sap.ue_id = ue_id;
-  esm_sap.ctx = emm_context;
-  esm_sap.data.eps_bearer_context_deactivate.ebi = ESM_SAP_ALL_EBI;
-  //esm_sap_send (&esm_sap);
+ // /* 
+ //  * Release ESM PDN and bearer context
+ //  */
 
   MessageDef *esm_sap_msg_p = itti_alloc_new_message(TASK_EMM_SAP, ESM_SAP_TEST);
   ESM_DATA_IND(esm_sap_msg_p ).primitive =  ESM_EPS_BEARER_CONTEXT_DEACTIVATE_REQ;

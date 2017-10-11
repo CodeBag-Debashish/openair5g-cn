@@ -531,30 +531,9 @@ static int _emm_cn_activate_dedicated_bearer_req (emm_cn_activate_dedicated_bear
   OAILOG_FUNC_IN (LOG_NAS_EMM);
   int                                     rc = RETURNok;
   // forward to ESM
-  esm_sap_t                               esm_sap = {0};
 
   ue_mm_context_t *ue_mm_context = mme_ue_context_exists_mme_ue_s1ap_id (&mme_app_desc.mme_ue_contexts, msg->ue_id);
 
-  esm_sap.primitive = ESM_DEDICATED_EPS_BEARER_CONTEXT_ACTIVATE_REQ;
-  esm_sap.ctx           = &ue_mm_context->emm_context;
-  esm_sap.is_standalone = true;
-  esm_sap.ue_id         = msg->ue_id;
-  esm_sap.data.eps_dedicated_bearer_context_activate.cid         = msg->cid;
-  esm_sap.data.eps_dedicated_bearer_context_activate.ebi         = msg->ebi;
-  esm_sap.data.eps_dedicated_bearer_context_activate.linked_ebi  = msg->linked_ebi;
-  esm_sap.data.eps_dedicated_bearer_context_activate.tft         = msg->tft;
-  esm_sap.data.eps_dedicated_bearer_context_activate.qci         = msg->bearer_qos.qci;
-  esm_sap.data.eps_dedicated_bearer_context_activate.gbr_ul      = msg->bearer_qos.gbr.br_ul;
-  esm_sap.data.eps_dedicated_bearer_context_activate.gbr_dl      = msg->bearer_qos.gbr.br_dl;
-  esm_sap.data.eps_dedicated_bearer_context_activate.mbr_ul      = msg->bearer_qos.mbr.br_ul;
-  esm_sap.data.eps_dedicated_bearer_context_activate.mbr_dl      = msg->bearer_qos.mbr.br_dl;
-  // stole ref if any
-  esm_sap.data.eps_dedicated_bearer_context_activate.pco         = msg->pco;
-  // stole ref if any
-  MSC_LOG_TX_MESSAGE (MSC_NAS_EMM_MME, MSC_NAS_ESM_MME, NULL, 0, "0 ESM_DEDICATED_EPS_BEARER_CONTEXT_ACTIVATE_REQ ue id " MME_UE_S1AP_ID_FMT " ebi %u",
-      esm_sap.ue_id,esm_sap.data.eps_dedicated_bearer_context_activate.ebi);
-
-  //rc = esm_sap_send (&esm_sap);
   MessageDef *esm_sap_msg_p = itti_alloc_new_message(TASK_EMM_SAP, ESM_SAP_TEST);
   ESM_DATA_IND(esm_sap_msg_p ).primitive =  ESM_DEDICATED_EPS_BEARER_CONTEXT_ACTIVATE_REQ;
   ESM_DATA_IND(esm_sap_msg_p).is_standalone =  true;
