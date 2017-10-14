@@ -43,4 +43,4 @@ MESSAGE_DEF(MME_APP_CREATE_DEDICATED_BEARER_REQ   , MESSAGE_PRIORITY_MED, itti_m
 MESSAGE_DEF(MME_APP_CREATE_DEDICATED_BEARER_RSP   , MESSAGE_PRIORITY_MED, itti_mme_app_create_dedicated_bearer_rsp_t  ,  mme_app_create_dedicated_bearer_rsp)
 MESSAGE_DEF(MME_APP_CREATE_DEDICATED_BEARER_REJ   , MESSAGE_PRIORITY_MED, itti_mme_app_create_dedicated_bearer_rej_t  ,  mme_app_create_dedicated_bearer_rej)
 MESSAGE_DEF(MME_APP_S1AP_MME_UE_ID_NOTIFICATION	  , MESSAGE_PRIORITY_MED, itti_mme_app_s1ap_mme_ue_id_notification_t  ,  mme_app_s1ap_mme_ue_id_notification)
-
+MESSAGE_DEF(EMM_REG_ATTACH_CNF	  , MESSAGE_PRIORITY_MED, emm_reg_attach_cnf_t  ,  emm_reg_attach_cnf)

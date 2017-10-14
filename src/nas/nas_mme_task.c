@@ -48,6 +48,7 @@
 #include "nas_timer.h"
 #include "nas_proc.h"
 #include "esm_sap.h"
+#include "emm_reg.h"
 
 static void nas_exit(void);
 
@@ -62,6 +63,11 @@ static void *nas_intertask_interface (void *args_p)
     itti_receive_msg (TASK_NAS_MME, &received_message_p);
 
     switch (ITTI_MSG_ID (received_message_p)) {
+    case EMM_REG_ATTACH_CNF:{
+				   //emm_reg_attach_conf_t * msg=&(EMM_REG_ATTACH_CNF_DATA_IND(received_message_p)); 
+				   emm_reg_send((emm_reg_t *)&(EMM_REG_ATTACH_CNF_DATA_IND(received_message_p)));
+			    }
+			    break;
     case MESSAGE_TEST:{
         OAI_FPRINTF_INFO("TASK_NAS_MME received MESSAGE_TEST\n");
       }

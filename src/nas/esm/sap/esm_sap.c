@@ -65,7 +65,8 @@
 #include "esm_proc.h"
 #include "intertask_interface.h"
 #include "assertions.h"
-
+#include "emm_sap.h"
+#include "nas_procedures.h"
 /****************************************************************************/
 /****************  E X T E R N A L    D E F I N I T I O N S  ****************/
 /****************************************************************************/
@@ -173,6 +174,7 @@ void * esm_sap_message_process(__attribute__((unused)) void *args)
  	 int                                     rc = RETURNerror;
  	 pdn_cid_t                               pid = MAX_APN_PER_UE;
 	 
+	 emm_sap_t                               emm_sap = {0};
         while(1){
                 printf("in receiving message----\n");
                 MessageDef *received_message_p = NULL;
@@ -184,7 +186,7 @@ void * esm_sap_message_process(__attribute__((unused)) void *args)
  		  */
  		 esm_primitive_t                  primitive = ESM_DATA_IND(received_message_p).primitive;
 		 esm_sap_test_t * msg=&(ESM_DATA_IND(received_message_p));
-
+			
  		 assert ((primitive > ESM_START) && (primitive < ESM_END));
  		 OAILOG_INFO (LOG_NAS_ESM, "ESM-SAP   - Received primitive %s (%d)\n", _esm_sap_primitive_str[primitive - ESM_START - 1], primitive);
 
@@ -235,6 +237,30 @@ void * esm_sap_message_process(__attribute__((unused)) void *args)
 		     * The MME received activate default ESP bearer context accept
 		     */
 		    rc = _esm_sap_recv (ACTIVATE_DEFAULT_EPS_BEARER_CONTEXT_ACCEPT, msg->is_standalone, msg->ctx, msg->recv, msg->send, &msg->err);
+		    if((rc != RETURNerror) && (msg->err == ESM_SAP_SUCCESS)) {
+		   	 /*
+			  *      * Set the network attachment indicator
+			  *           */
+			  //ue_mm_context->emm_context.is_attached = true;
+			 msg->ctx->is_attached = true;
+			 MessageDef *emm_reg_attach_cnf_p = itti_alloc_new_message(TASK_ESM_SAP, EMM_REG_ATTACH_CNF);
+			 EMM_REG_ATTACH_CNF_DATA_IND(emm_reg_attach_cnf_p).primitive=EMMREG_ATTACH_CNF;
+			 EMM_REG_ATTACH_CNF_DATA_IND(emm_reg_attach_cnf_p).ue_id=msg->ue_id;
+			 EMM_REG_ATTACH_CNF_DATA_IND(emm_reg_attach_cnf_p).ctx=msg->ctx;
+			 EMM_REG_ATTACH_CNF_DATA_IND(emm_reg_attach_cnf_p).notify=true;
+			 EMM_REG_ATTACH_CNF_DATA_IND(emm_reg_attach_cnf_p).free_proc=true;
+			 EMM_REG_ATTACH_CNF_DATA_IND(emm_reg_attach_cnf_p).u.attach.proc=(nas_emm_attach_proc_t *)msg->ctx->emm_procedures->emm_specific_proc;
+			 itti_send_msg_to_task(TASK_NAS_MME,INSTANCE_DEFAULT,emm_reg_attach_cnf_p );
+
+			 // emm_sap.primitive = EMMREG_ATTACH_CNF;
+			 // emm_sap.u.emm_reg.ue_id = msg->ue_id;
+			 // emm_sap.u.emm_reg.ctx = msg->ctx;//ue_mm_context->emm_context;
+			 // emm_sap.u.emm_reg.notify = true;
+			 // emm_sap.u.emm_reg.free_proc = true;
+			 // emm_sap.u.emm_reg.u.attach.proc =(nas_emm_attach_proc_t *)msg->ctx->emm_procedures->emm_specific_proc;// attach_proc;
+		    	  //rc = emm_sap_send (&emm_sap);
+
+		    }
 		    break;
 		
 		  case ESM_DEFAULT_EPS_BEARER_CONTEXT_ACTIVATE_REJ:

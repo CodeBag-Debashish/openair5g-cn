@@ -629,7 +629,7 @@ int emm_proc_attach_complete (
     emm_sap.u.emm_reg.notify = true;
     emm_sap.u.emm_reg.free_proc = true;
     emm_sap.u.emm_reg.u.attach.proc = attach_proc;
-    rc = emm_sap_send (&emm_sap);
+    //rc = emm_sap_send (&emm_sap);
   //the following lines should be reserved
  // } else if (esm_sap.err != ESM_SAP_DISCARDED) {
  //   /*
