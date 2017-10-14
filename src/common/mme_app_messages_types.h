@@ -35,10 +35,11 @@
 #include "emm_regDef.h"
 #include "3gpp_36.401.h"
 #include "emmData.h"
+#include "bstrlib.h"
 #ifndef FILE_MME_APP_MESSAGES_TYPES_SEEN
 #define FILE_MME_APP_MESSAGES_TYPES_SEEN
 
-#define EMM_REG_ATTACH_CNF_DATA_IND(mSGpTR)			 (mSGpTR)->ittiMsg.emm_reg_attach_cnf
+#define EMM_REG_DATA_IND(mSGpTR)			 (mSGpTR)->ittiMsg.emm_reg
 #define MME_APP_CONNECTION_ESTABLISHMENT_CNF(mSGpTR)     (mSGpTR)->ittiMsg.mme_app_connection_establishment_cnf
 #define MME_APP_INITIAL_CONTEXT_SETUP_RSP(mSGpTR)        (mSGpTR)->ittiMsg.mme_app_initial_context_setup_rsp
 #define MME_APP_INITIAL_CONTEXT_SETUP_FAILURE(mSGpTR)    (mSGpTR)->ittiMsg.mme_app_initial_context_setup_failure
@@ -46,25 +47,30 @@
 #define MME_APP_CREATE_DEDICATED_BEARER_REQ(mSGpTR)      (mSGpTR)->ittiMsg.mme_app_create_dedicated_bearer_req
 #define MME_APP_CREATE_DEDICATED_BEARER_RSP(mSGpTR)      (mSGpTR)->ittiMsg.mme_app_create_dedicated_bearer_rsp
 #define MME_APP_CREATE_DEDICATED_BEARER_REJ(mSGpTR)      (mSGpTR)->ittiMsg.mme_app_create_dedicated_bearer_rej
+#define NAS_EMMAS_ESTABLISH_REJ(mSGpTR)      	 (mSGpTR)->ittiMsg.nas_emmas_establish_rej
 
-typedef struct emm_reg_attach_cnf_s {
-	  emm_reg_primitive_t    primitive;
-	  mme_ue_s1ap_id_t       ue_id;
-	  struct emm_context_s  *ctx;
-	  bool                   notify; // notify through call-backs
-	  bool                   free_proc;              
-  
-	  union {
-	        emm_reg_attach_t     attach;
-	        emm_reg_detach_t     detach;
-	        emm_reg_tau_t        tau;
-	        emm_reg_sr_t         sr;
-	        emm_reg_common_t     common;
-	        emm_reg_ll_failure_t ll_failure;
-	        emm_reg_ll_sucess_t  ll_success;
-	        emm_reg_sdu_non_delivery_ho_t non_delivery_ho;
-	      } u;
-} emm_reg_attach_cnf_t;
+//typedef struct emm_reg_attach_cnf_s {
+//	  emm_reg_primitive_t    primitive;
+//	  mme_ue_s1ap_id_t       ue_id;
+//	  struct emm_context_s  *ctx;
+//	  bool                   notify; // notify through call-backs
+//	  bool                   free_proc;              
+//  
+//	  union {
+//	        emm_reg_attach_t     attach;
+//	        emm_reg_detach_t     detach;
+//	        emm_reg_tau_t        tau;
+//	        emm_reg_sr_t         sr;
+//	        emm_reg_common_t     common;
+//	        emm_reg_ll_failure_t ll_failure;
+//	        emm_reg_ll_sucess_t  ll_success;
+//	        emm_reg_sdu_non_delivery_ho_t non_delivery_ho;
+//	      } u;
+//} emm_reg_attach_cnf_t;
+typedef struct  itti_nas_emmas_establish_rej_s {
+	emm_context_t *emm_context;	
+	bstring send;
+} itti_nas_emmas_establish_rej_t;
 
 typedef struct itti_mme_app_connection_establishment_cnf_s {
   mme_ue_s1ap_id_t        ue_id;

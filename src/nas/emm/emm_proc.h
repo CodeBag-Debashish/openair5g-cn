@@ -45,7 +45,7 @@ Description Defines the EPS Mobility Management procedures executed at
 #include "emm_data.h"
 
 #include "nas_message.h" //nas_message_decode_status_t
-
+#include "intertask_interface.h"
 /****************************************************************************/
 /*********************  G L O B A L    C O N S T A N T S  *******************/
 /****************************************************************************/
@@ -182,7 +182,7 @@ int emm_proc_attach_request(mme_ue_s1ap_id_t ue_id,
                             emm_attach_request_ies_t * const params);
 
 int _emm_attach_reject (emm_context_t *emm_context, struct nas_base_proc_s * nas_base_proc);
-
+int nas_emm_attach_reject(itti_nas_emmas_establish_rej_t * msg);
 int emm_proc_attach_reject(mme_ue_s1ap_id_t ue_id, emm_cause_t emm_cause);
 
 int emm_proc_attach_complete (

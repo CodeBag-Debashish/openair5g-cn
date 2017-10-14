@@ -49,25 +49,28 @@
 #include "nas_proc.h"
 #include "esm_sap.h"
 #include "emm_reg.h"
-
+#include "emm_proc.h"
 static void nas_exit(void);
 
 //------------------------------------------------------------------------------
 static void *nas_intertask_interface (void *args_p)
 {
   itti_mark_task_ready (TASK_NAS_MME);
-
+  emm_context_t *emm_context; 
   while (1) {
     MessageDef                             *received_message_p = NULL;
 
     itti_receive_msg (TASK_NAS_MME, &received_message_p);
 
     switch (ITTI_MSG_ID (received_message_p)) {
-    case EMM_REG_ATTACH_CNF:{
-				   //emm_reg_attach_conf_t * msg=&(EMM_REG_ATTACH_CNF_DATA_IND(received_message_p)); 
-				   emm_reg_send((emm_reg_t *)&(EMM_REG_ATTACH_CNF_DATA_IND(received_message_p)));
-			    }
-			    break;
+    case EMM_REG_MSG:{
+        emm_reg_send((emm_reg_t *)&(EMM_REG_DATA_IND(received_message_p)));
+       }
+       break;
+    case NAS_EMMAS_ESTABLISH_REJ:{ //not tested yet
+	nas_emm_attach_reject( & NAS_EMMAS_ESTABLISH_REJ(received_message_p ));
+	}
+	break;	 
     case MESSAGE_TEST:{
         OAI_FPRINTF_INFO("TASK_NAS_MME received MESSAGE_TEST\n");
       }

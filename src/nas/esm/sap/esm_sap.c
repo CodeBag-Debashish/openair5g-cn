@@ -243,24 +243,29 @@ void * esm_sap_message_process(__attribute__((unused)) void *args)
 			  *           */
 			  //ue_mm_context->emm_context.is_attached = true;
 			 msg->ctx->is_attached = true;
-			 MessageDef *emm_reg_attach_cnf_p = itti_alloc_new_message(TASK_ESM_SAP, EMM_REG_ATTACH_CNF);
-			 EMM_REG_ATTACH_CNF_DATA_IND(emm_reg_attach_cnf_p).primitive=EMMREG_ATTACH_CNF;
-			 EMM_REG_ATTACH_CNF_DATA_IND(emm_reg_attach_cnf_p).ue_id=msg->ue_id;
-			 EMM_REG_ATTACH_CNF_DATA_IND(emm_reg_attach_cnf_p).ctx=msg->ctx;
-			 EMM_REG_ATTACH_CNF_DATA_IND(emm_reg_attach_cnf_p).notify=true;
-			 EMM_REG_ATTACH_CNF_DATA_IND(emm_reg_attach_cnf_p).free_proc=true;
-			 EMM_REG_ATTACH_CNF_DATA_IND(emm_reg_attach_cnf_p).u.attach.proc=(nas_emm_attach_proc_t *)msg->ctx->emm_procedures->emm_specific_proc;
-			 itti_send_msg_to_task(TASK_NAS_MME,INSTANCE_DEFAULT,emm_reg_attach_cnf_p );
+			 MessageDef *emm_reg_p = itti_alloc_new_message(TASK_ESM_SAP, EMM_REG_MSG);
+			 EMM_REG_DATA_IND(emm_reg_p).primitive=EMMREG_ATTACH_CNF;
+			 EMM_REG_DATA_IND(emm_reg_p).ue_id=msg->ue_id;
+			 EMM_REG_DATA_IND(emm_reg_p).ctx=msg->ctx;
+			 EMM_REG_DATA_IND(emm_reg_p).notify=true;
+			 EMM_REG_DATA_IND(emm_reg_p).free_proc=true;
+			 EMM_REG_DATA_IND(emm_reg_p).u.attach.proc=(nas_emm_attach_proc_t *)msg->ctx->emm_procedures->emm_specific_proc;
+			 itti_send_msg_to_task(TASK_NAS_MME,INSTANCE_DEFAULT,emm_reg_p );
 
-			 // emm_sap.primitive = EMMREG_ATTACH_CNF;
-			 // emm_sap.u.emm_reg.ue_id = msg->ue_id;
-			 // emm_sap.u.emm_reg.ctx = msg->ctx;//ue_mm_context->emm_context;
-			 // emm_sap.u.emm_reg.notify = true;
-			 // emm_sap.u.emm_reg.free_proc = true;
-			 // emm_sap.u.emm_reg.u.attach.proc =(nas_emm_attach_proc_t *)msg->ctx->emm_procedures->emm_specific_proc;// attach_proc;
-		    	  //rc = emm_sap_send (&emm_sap);
-
+		    }else if(msg->err != ESM_SAP_DISCARDED){
+			    MessageDef *emm_reg_p = itti_alloc_new_message (TASK_ESM_SAP , EMM_REG_MSG );
+			    EMM_REG_DATA_IND(emm_reg_p).primitive = EMMREG_ATTACH_REJ;
+			    EMM_REG_DATA_IND (emm_reg_p).ue_id = msg->ue_id ;
+			    EMM_REG_DATA_IND (emm_reg_p).ctx = msg->ctx;
+			    EMM_REG_DATA_IND (emm_reg_p ).notify = true;
+			    EMM_REG_DATA_IND (emm_reg_p).free_proc = true;
+			    EMM_REG_DATA_IND (emm_reg_p).u.attach.proc = (nas_emm_attach_proc_t *)msg->ctx->emm_procedures->emm_specific_proc;
+			    itti_send_msg_to_task(TASK_NAS_MME,INSTANCE_DEFAULT , emm_reg_p );
+		    }else{
+			    rc= RETURNok;
 		    }
+		    OAILOG_FUNC_RETURN (LOG_NAS_EMM, rc);
+
 		    break;
 		
 		  case ESM_DEFAULT_EPS_BEARER_CONTEXT_ACTIVATE_REJ:
@@ -334,6 +339,14 @@ void * esm_sap_message_process(__attribute__((unused)) void *args)
 		
 		  case ESM_UNITDATA_IND:
 		    rc = _esm_sap_recv (-1, msg->is_standalone, msg->ctx, msg->recv, msg->send, &msg->err);
+		    if ((rc != RETURNerror) && (msg->err == ESM_SAP_SUCCESS)){
+			    rc = RETURNok;
+		    }else if(msg->err != ESM_SAP_DISCARDED){ //not tested yet ---by wluhan
+			  MessageDef *emmas_rej_p = itti_alloc_new_message (TASK_ESM_SAP , NAS_EMMAS_ESTABLISH_REJ );
+			  NAS_EMMAS_ESTABLISH_REJ(emmas_rej_p).emm_context=msg->ctx; 
+			  NAS_EMMAS_ESTABLISH_REJ(emmas_rej_p).send=msg->send; 
+			  itti_send_msg_to_task(TASK_NAS_MME,INSTANCE_DEFAULT,emmas_rej_p); 
+			}
 		    break;
 		
 		  default:

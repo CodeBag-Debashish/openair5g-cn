@@ -614,44 +614,7 @@ int emm_proc_attach_complete (
     OAILOG_INFO (LOG_NAS_EMM, "UE " MME_UE_S1AP_ID_FMT " ATTACH COMPLETE discarded (context not found)\n", ue_id);
   }
 
-//  if ((rc != RETURNerror) && (esm_sap.err == ESM_SAP_SUCCESS)) {
-	if(1){
-    /*
-     * Set the network attachment indicator
-     */
-    ue_mm_context->emm_context.is_attached = true;
-    /*
-     * Notify EMM that attach procedure has successfully completed
-     */
-    emm_sap.primitive = EMMREG_ATTACH_CNF;
-    emm_sap.u.emm_reg.ue_id = ue_id;
-    emm_sap.u.emm_reg.ctx = &ue_mm_context->emm_context;
-    emm_sap.u.emm_reg.notify = true;
-    emm_sap.u.emm_reg.free_proc = true;
-    emm_sap.u.emm_reg.u.attach.proc = attach_proc;
-    //rc = emm_sap_send (&emm_sap);
-  //the following lines should be reserved
- // } else if (esm_sap.err != ESM_SAP_DISCARDED) {
- //   /*
- //    * Notify EMM that attach procedure failed
- //    */
- //   emm_sap.primitive = EMMREG_ATTACH_REJ;
- //   emm_sap.u.emm_reg.ue_id = ue_id;
- //   emm_sap.u.emm_reg.ctx = &ue_mm_context->emm_context;
- //   emm_sap.u.emm_reg.notify = true;
- //   emm_sap.u.emm_reg.free_proc = true;
- //   emm_sap.u.emm_reg.u.attach.proc = attach_proc;
- //   rc = emm_sap_send (&emm_sap);
-  } else {
-    /*
-     * ESM procedure failed and, received message has been discarded or
-     * Status message has been returned; ignore ESM procedure failure
-     */
-    rc = RETURNok;
-  }
-
   unlock_ue_contexts(ue_mm_context);
-  OAILOG_FUNC_RETURN (LOG_NAS_EMM, rc);
 }
 
 
@@ -779,6 +742,23 @@ static int _emm_attach_release (emm_context_t *emm_context)
  *      Others:    None
  *
  */
+int nas_emm_attach_reject(itti_nas_emmas_establish_rej_t * msg){
+	emm_context_t * emm_context;
+	emm_context=msg->emm_context;
+	nas_emm_attach_proc_t                  *attach_proc;
+        attach_proc = get_nas_specific_procedure_attach(emm_context);
+        /*
+         * The attach procedure failed due to an ESM procedure failure
+         */
+        attach_proc->emm_cause = EMM_CAUSE_ESM_FAILURE;
+        /*
+         * Setup the ESM message container to include PDN Connectivity Reject
+         * message within the Attach Reject message
+         */
+        bdestroy_wrapper (&attach_proc->ies->esm_msg);
+        attach_proc->esm_msg_out = msg->send;
+        _emm_attach_reject (emm_context, &attach_proc->emm_spec_proc.emm_proc.base_proc);
+}
 int _emm_attach_reject (emm_context_t *emm_context, struct nas_base_proc_s * nas_base_proc)
 {
   OAILOG_FUNC_IN (LOG_NAS_EMM);
@@ -1217,30 +1197,32 @@ static int _emm_attach (emm_context_t *emm_context)
 	ESM_DATA_IND(esm_sap_msg_p).ctx =  emm_context;
 	int send_res= itti_send_msg_to_task(TASK_ESM_SAP,INSTANCE_DEFAULT,esm_sap_msg_p);	
 
-     // if ((rc != RETURNerror) && (esm_sap.err == ESM_SAP_SUCCESS)) {
-     	if(1){
-        rc = RETURNok;
-     // } else if (esm_sap.err != ESM_SAP_DISCARDED) {
-      } else if (1) {//should be changed to origin
-        /*
-         * The attach procedure failed due to an ESM procedure failure
-         */
-        attach_proc->emm_cause = EMM_CAUSE_ESM_FAILURE;
+//     // if ((rc != RETURNerror) && (esm_sap.err == ESM_SAP_SUCCESS)) {
+//     	if(1){
+//        rc = RETURNok;
+//     // } else if (esm_sap.err != ESM_SAP_DISCARDED) {
+//      } else if (1) {//should be changed to origin
+//        /*
+//         * The attach procedure failed due to an ESM procedure failure
+//         */
+//        attach_proc->emm_cause = EMM_CAUSE_ESM_FAILURE;
+//
+//        /*
+//         * Setup the ESM message container to include PDN Connectivity Reject
+//         * message within the Attach Reject message
+//         */
+//        bdestroy_wrapper (&attach_proc->ies->esm_msg);
+//       // attach_proc->esm_msg_out = esm_sap.send;//should be uncommented
+//        rc = _emm_attach_reject (emm_context, &attach_proc->emm_spec_proc.emm_proc.base_proc);
+//      } else {
+//        /*
+//         * ESM procedure failed and, received message has been discarded or
+//         * Status message has been returned; ignore ESM procedure failure
+//         */
+//        rc = RETURNok;
+//      }
 
-        /*
-         * Setup the ESM message container to include PDN Connectivity Reject
-         * message within the Attach Reject message
-         */
-        bdestroy_wrapper (&attach_proc->ies->esm_msg);
-       // attach_proc->esm_msg_out = esm_sap.send;//should be uncommented
-        rc = _emm_attach_reject (emm_context, &attach_proc->emm_spec_proc.emm_proc.base_proc);
-      } else {
-        /*
-         * ESM procedure failed and, received message has been discarded or
-         * Status message has been returned; ignore ESM procedure failure
-         */
-        rc = RETURNok;
-      }
+      rc = RETURNok;
     } else {
       rc = _emm_send_attach_accept(emm_context);
     }
