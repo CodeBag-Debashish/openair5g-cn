@@ -2,9 +2,9 @@
  * Licensed to the OpenAirInterface (OAI) Software Alliance under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The OpenAirInterface Software Alliance licenses this file to You under 
+ * The OpenAirInterface Software Alliance licenses this file to You under
  * the Apache License, Version 2.0  (the "License"); you may not use this file
- * except in compliance with the License.  
+ * except in compliance with the License.
  * You may obtain a copy of the License at
  *
  *      http://www.apache.org/licenses/LICENSE-2.0
@@ -364,18 +364,22 @@ _pdn_connectivity_create (
     pdn_context_t *pdn_context = mme_app_create_pdn_context(ue_mm_context, pdn_cid, context_identifier);
 
     if (pdn_context ) {
-      /*
-       * Increment the number of PDN connections
-       */
-      ue_mm_context->emm_context.esm_ctx.n_pdns += 1;
-      /*
-       * Set the procedure transaction identity
-       */
-      pdn_context->esm_data.pti = pti;
-      /*
-       * Set the emergency bearer services indicator
-       */
-      pdn_context->esm_data.is_emergency = is_emergency;
+        /*
+         * Increment the number of PDN connections
+         */
+        /*ue_mm_context->emm_context.esm_ctx.n_pdns += 1;*/
+        struct esm_context_s* esm_p;
+        esm_get_inplace(ue_mm_context->emm_context._guti,&esm_p);
+        esm_p->n_pdns+=1;
+        /*ue_mm_context->emm_context.esm_ctx.n_pdns += 1;*/
+        /*
+         * Set the procedure transaction identity
+         */
+        pdn_context->esm_data.pti = pti;
+        /*
+         * Set the emergency bearer services indicator
+         */
+        pdn_context->esm_data.is_emergency = is_emergency;
 
       if (pco) {
         if (!pdn_context->pco) {
@@ -508,7 +512,10 @@ proc_tid_t _pdn_connectivity_delete (emm_context_t * emm_context, pdn_cid_t pdn_
     /*
      * Decrement the number of PDN connections
      */
-    ue_mm_context->emm_context.esm_ctx.n_pdns -= 1;
+
+    struct esm_context_s* esm_p;
+    esm_get_inplace(ue_mm_context->emm_context._guti,&esm_p);
+    esm_p->n_pdns -= 1;
 
     /*
      * Release allocated PDN connection data

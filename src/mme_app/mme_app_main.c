@@ -2,9 +2,9 @@
  * Licensed to the OpenAirInterface (OAI) Software Alliance under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The OpenAirInterface Software Alliance licenses this file to You under 
+ * The OpenAirInterface Software Alliance licenses this file to You under
  * the Apache License, Version 2.0  (the "License"); you may not use this file
- * except in compliance with the License.  
+ * except in compliance with the License.
  * You may obtain a copy of the License at
  *
  *      http://www.apache.org/licenses/LICENSE-2.0
@@ -50,6 +50,12 @@
 #include "mme_app_statistics.h"
 #include "common_defs.h"
 #include "mme_app_edns_emulation.h"
+
+/*#include "esm_hashtable.h"*/
+
+extern const bool ESM_DEBUG;
+
+
 mme_app_desc_t                          mme_app_desc = {.rw_lock = PTHREAD_RWLOCK_INITIALIZER, 0} ;
 
 void     *mme_app_thread (void *args);
@@ -234,19 +240,19 @@ void *mme_app_thread (void *args)
         itti_exit_task ();
       }
       break;
-    
+
     case MME_APP_INITIAL_CONTEXT_SETUP_FAILURE:{
         mme_app_handle_initial_context_setup_failure (&MME_APP_INITIAL_CONTEXT_SETUP_FAILURE (received_message_p));
       }
       break;
-    
+
     case TIMER_HAS_EXPIRED:{
         /*
          * Check statistic timer
          */
         if (received_message_p->ittiMsg.timer_has_expired.timer_id == mme_app_desc.statistic_timer_id) {
           mme_app_statistics_display ();
-        } else if (received_message_p->ittiMsg.timer_has_expired.arg != NULL) { 
+        } else if (received_message_p->ittiMsg.timer_has_expired.arg != NULL) {
           mme_ue_s1ap_id_t mme_ue_s1ap_id = *((mme_ue_s1ap_id_t *)(received_message_p->ittiMsg.timer_has_expired.arg));
           ue_context_p = mme_ue_context_exists_mme_ue_s1ap_id (&mme_app_desc.mme_ue_contexts, mme_ue_s1ap_id);
           if (ue_context_p == NULL) {
@@ -254,10 +260,10 @@ void *mme_app_thread (void *args)
             break;
           }
           if (received_message_p->ittiMsg.timer_has_expired.timer_id == ue_context_p->mobile_reachability_timer.id) {
-            // Mobile Reachability Timer expiry handler 
+            // Mobile Reachability Timer expiry handler
             mme_app_handle_mobile_reachability_timer_expiry (ue_context_p);
           } else if (received_message_p->ittiMsg.timer_has_expired.timer_id == ue_context_p->implicit_detach_timer.id) {
-            // Implicit Detach Timer expiry handler 
+            // Implicit Detach Timer expiry handler
             mme_app_handle_implicit_detach_timer_expiry (ue_context_p);
           } else if (received_message_p->ittiMsg.timer_has_expired.timer_id == ue_context_p->initial_context_setup_rsp_timer.id) {
             // Initial Context Setup Rsp Timer expiry handler
@@ -287,29 +293,43 @@ void *mme_app_thread (void *args)
 //------------------------------------------------------------------------------
 int mme_app_init (const mme_config_t * mme_config_p)
 {
-  OAILOG_FUNC_IN (LOG_MME_APP);
-  memset (&mme_app_desc, 0, sizeof (mme_app_desc));
-  pthread_rwlock_init (&mme_app_desc.rw_lock, NULL);
-  bstring b = bfromcstr("mme_app_imsi_ue_context_htbl");
-  mme_app_desc.mme_ue_contexts.imsi_ue_context_htbl = hashtable_uint64_ts_create (mme_config.max_ues, NULL, b);
-  btrunc(b, 0);
-  bassigncstr(b, "mme_app_tun11_ue_context_htbl");
-  mme_app_desc.mme_ue_contexts.tun11_ue_context_htbl = hashtable_uint64_ts_create (mme_config.max_ues, NULL, b);
-  AssertFatal(sizeof(uintptr_t) >= sizeof(uint64_t), "Problem with mme_ue_s1ap_id_ue_context_htbl in MME_APP");
-  btrunc(b, 0);
-  bassigncstr(b, "mme_app_mme_ue_s1ap_id_ue_context_htbl");
-  mme_app_desc.mme_ue_contexts.mme_ue_s1ap_id_ue_context_htbl = hashtable_ts_create (mme_config.max_ues, NULL, NULL, b);
-  btrunc(b, 0);
-  bassigncstr(b, "mme_app_enb_ue_s1ap_id_ue_context_htbl");
-  mme_app_desc.mme_ue_contexts.enb_ue_s1ap_id_ue_context_htbl = hashtable_uint64_ts_create (mme_config.max_ues, NULL, b);
-  btrunc(b, 0);
-  bassigncstr(b, "mme_app_guti_ue_context_htbl");
-  mme_app_desc.mme_ue_contexts.guti_ue_context_htbl = obj_hashtable_uint64_ts_create (mme_config.max_ues, NULL, NULL, b);
-  bdestroy_wrapper (&b);
+    OAILOG_FUNC_IN (LOG_MME_APP);
+    memset (&mme_app_desc, 0, sizeof (mme_app_desc));
+    pthread_rwlock_init (&mme_app_desc.rw_lock, NULL);
+    bstring b = bfromcstr("mme_app_imsi_ue_context_htbl");
+    mme_app_desc.mme_ue_contexts.imsi_ue_context_htbl = hashtable_uint64_ts_create (mme_config.max_ues, NULL, b);
+    btrunc(b, 0);
+    bassigncstr(b, "mme_app_tun11_ue_context_htbl");
+    mme_app_desc.mme_ue_contexts.tun11_ue_context_htbl = hashtable_uint64_ts_create (mme_config.max_ues, NULL, b);
+    AssertFatal(sizeof(uintptr_t) >= sizeof(uint64_t), "Problem with mme_ue_s1ap_id_ue_context_htbl in MME_APP");
+    btrunc(b, 0);
+    bassigncstr(b, "mme_app_mme_ue_s1ap_id_ue_context_htbl");
+    mme_app_desc.mme_ue_contexts.mme_ue_s1ap_id_ue_context_htbl = hashtable_ts_create (mme_config.max_ues, NULL, NULL, b);
+    btrunc(b, 0);
+    bassigncstr(b, "mme_app_enb_ue_s1ap_id_ue_context_htbl");
+    mme_app_desc.mme_ue_contexts.enb_ue_s1ap_id_ue_context_htbl = hashtable_uint64_ts_create (mme_config.max_ues, NULL, b);
+    btrunc(b, 0);
+    bassigncstr(b, "mme_app_guti_ue_context_htbl");
+    mme_app_desc.mme_ue_contexts.guti_ue_context_htbl = obj_hashtable_uint64_ts_create (mme_config.max_ues, NULL, NULL, b);
+    bdestroy_wrapper (&b);
+
+
+    /*printf("1111");*/
+
+    /*esm_useless();*/
+
+  /*ls();*/
+
 
   if (mme_app_edns_init(mme_config_p)) {
     OAILOG_FUNC_RETURN (LOG_MME_APP, RETURNerror);
   }
+    /*esm_useless();*/
+      if(esm_init()==RETURNok)
+      {
+                  printf("ESM HASH_TABLE_CREATE_OK\n");
+      }
+
   /*Create ESM SAP thread*/
 
 //  if (itti_create_task (TASK_ESM_SAP, &esm_sap_message_process, NULL) < 0) {
@@ -335,6 +355,10 @@ int mme_app_init (const mme_config_t * mme_config_p)
     OAILOG_ERROR (LOG_MME_APP, "Failed to request new timer for statistics with %ds " "of periocidity\n", mme_config_p->mme_statistic_timer);
     mme_app_desc.statistic_timer_id = 0;
   }
+  if(ESM_DEBUG)
+  {
+      printf("\nmme_app_main over\n");
+  }
 
   OAILOG_DEBUG (LOG_MME_APP, "Initializing MME applicative layer: DONE\n");
   OAILOG_FUNC_RETURN (LOG_MME_APP, RETURNok);
@@ -344,7 +368,14 @@ int mme_app_init (const mme_config_t * mme_config_p)
 void mme_app_exit (void)
 {
   timer_remove(mme_app_desc.statistic_timer_id, NULL);
+
+
   mme_app_edns_exit();
+
+  esm_useless();
+  esm_exit();
+  esm_useless();
+
   hashtable_uint64_ts_destroy (mme_app_desc.mme_ue_contexts.imsi_ue_context_htbl);
   hashtable_uint64_ts_destroy (mme_app_desc.mme_ue_contexts.tun11_ue_context_htbl);
   hashtable_ts_destroy (mme_app_desc.mme_ue_contexts.mme_ue_s1ap_id_ue_context_htbl);

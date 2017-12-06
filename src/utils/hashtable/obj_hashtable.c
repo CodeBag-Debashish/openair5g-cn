@@ -531,7 +531,8 @@ obj_hashtable_insert (
   node = hashtblP->nodes[hash];
 
   while (node) {
-    if (node->key == keyP) {
+      if (memcmp(node->key,keyP,key_sizeP)==0) {
+    /*if (node->key == keyP) {*/
       if (node->data) {
         hashtblP->freedatafunc (&node->data);
       }
@@ -607,7 +608,7 @@ obj_hashtable_ts_insert (
     if (node->key == keyP) {
       if ((node->data) && (node->data != dataP)) {
         hashtblP->freedatafunc (&node->data);
-      
+
 
         node->data = dataP;
         node->key_size = key_sizeP;

@@ -2,9 +2,9 @@
  * Licensed to the OpenAirInterface (OAI) Software Alliance under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The OpenAirInterface Software Alliance licenses this file to You under 
+ * The OpenAirInterface Software Alliance licenses this file to You under
  * the Apache License, Version 2.0  (the "License"); you may not use this file
- * except in compliance with the License.  
+ * except in compliance with the License.
  * You may obtain a copy of the License at
  *
  *      http://www.apache.org/licenses/LICENSE-2.0
@@ -202,11 +202,18 @@ esm_recv_pdn_connectivity_request (
   /*
    * Get PDN connection and EPS bearer context data structure to setup
    */
-  if (!emm_context->esm_ctx.esm_proc_data) {
-    emm_context->esm_ctx.esm_proc_data  = (esm_proc_data_t *) calloc(1, sizeof(*emm_context->esm_ctx.esm_proc_data));
+   struct esm_context_s * esm_p;
+   esm_get_inplace(emm_context->_guti,&esm_p);
+
+ /*if (!emm_context->esm_ctx.esm_proc_data) {*/
+  if (!esm_p->esm_proc_data) {
+    /*emm_context->esm_ctx.esm_proc_data  = (esm_proc_data_t *) calloc(1, sizeof(*emm_context->esm_ctx.esm_proc_data));*/
+    esm_p->esm_proc_data  = (esm_proc_data_t *) calloc(1, sizeof(*esm_p->esm_proc_data));
+
   }
 
-  struct esm_proc_data_s * esm_data = emm_context->esm_ctx.esm_proc_data;
+  /*struct esm_proc_data_s * esm_data = emm_context->esm_ctx.esm_proc_data;*/
+  struct esm_proc_data_s * esm_data = esm_p->esm_proc_data;
 
   esm_data->pti = pti;
   /*
@@ -446,7 +453,10 @@ esm_cause_t esm_recv_information_response (
   if (pid != RETURNerror) {
 
     // Continue with pdn connectivity request
-    nas_itti_pdn_config_req(pti, ue_id, &emm_context->_imsi, emm_context->esm_ctx.esm_proc_data, emm_context->esm_ctx.esm_proc_data->request_type);
+    struct esm_context_s * esm_p;
+    esm_get_inplace(emm_context->_guti,&esm_p);
+    /*nas_itti_pdn_config_req(pti, ue_id, &emm_context->_imsi, emm_context->esm_ctx.esm_proc_data, emm_context->esm_ctx.esm_proc_data->request_type);*/
+    nas_itti_pdn_config_req(pti, ue_id, &emm_context->_imsi, esm_p->esm_proc_data, esm_p->esm_proc_data->request_type);
 
     esm_cause = ESM_CAUSE_SUCCESS;
   }

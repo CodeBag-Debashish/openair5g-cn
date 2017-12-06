@@ -2,9 +2,9 @@
  * Licensed to the OpenAirInterface (OAI) Software Alliance under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The OpenAirInterface Software Alliance licenses this file to You under 
+ * The OpenAirInterface Software Alliance licenses this file to You under
  * the Apache License, Version 2.0  (the "License"); you may not use this file
- * except in compliance with the License.  
+ * except in compliance with the License.
  * You may obtain a copy of the License at
  *
  *      http://www.apache.org/licenses/LICENSE-2.0
@@ -209,7 +209,11 @@ static int _emm_cn_pdn_config_res (emm_cn_pdn_config_res_t * msg_pP)
   // PDN selection here
   // Because NAS knows APN selected by UE if any
   // default APN selection
-  struct apn_configuration_s* apn_config = mme_app_select_apn(ue_mm_context, emm_ctx->esm_ctx.esm_proc_data->apn);
+  /*struct apn_configuration_s* apn_config = mme_app_select_apn(ue_mm_context, emm_ctx->esm_ctx.esm_proc_data->apn);*/
+
+  struct esm_context_s * esm_p;
+  esm_get_inplace(emm_ctx->_guti,&esm_p);
+  struct apn_configuration_s* apn_config = mme_app_select_apn(ue_mm_context, esm_p->esm_proc_data->apn);
 
   if (!apn_config) {
     /*
@@ -240,34 +244,62 @@ static int _emm_cn_pdn_config_res (emm_cn_pdn_config_res_t * msg_pP)
     /*
      * Execute the PDN connectivity procedure requested by the UE
      */
-    emm_ctx->esm_ctx.esm_proc_data->pdn_cid = pdn_cid;
-    emm_ctx->esm_ctx.esm_proc_data->bearer_qos.qci       = apn_config->subscribed_qos.qci;
-    emm_ctx->esm_ctx.esm_proc_data->bearer_qos.pci       = apn_config->subscribed_qos.allocation_retention_priority.pre_emp_capability;
-    emm_ctx->esm_ctx.esm_proc_data->bearer_qos.pl        = apn_config->subscribed_qos.allocation_retention_priority.priority_level;
-    emm_ctx->esm_ctx.esm_proc_data->bearer_qos.pvi       = apn_config->subscribed_qos.allocation_retention_priority.pre_emp_vulnerability;
-    emm_ctx->esm_ctx.esm_proc_data->bearer_qos.gbr.br_ul = 0;
-    emm_ctx->esm_ctx.esm_proc_data->bearer_qos.gbr.br_dl = 0;
-    emm_ctx->esm_ctx.esm_proc_data->bearer_qos.mbr.br_ul = 0;
-    emm_ctx->esm_ctx.esm_proc_data->bearer_qos.mbr.br_dl = 0;
-// TODO  "Better to throw emm_ctx->esm_ctx.esm_proc_data as a parameter or as a hidden parameter ?"
-    rc = esm_proc_pdn_connectivity_request (emm_ctx,
-        emm_ctx->esm_ctx.esm_proc_data->pti,
-        emm_ctx->esm_ctx.esm_proc_data->pdn_cid,
-        apn_config->context_identifier,
-        emm_ctx->esm_ctx.esm_proc_data->request_type,
-        emm_ctx->esm_ctx.esm_proc_data->apn,
-        emm_ctx->esm_ctx.esm_proc_data->pdn_type,
-        emm_ctx->esm_ctx.esm_proc_data->pdn_addr,
-        &emm_ctx->esm_ctx.esm_proc_data->bearer_qos,
-        (emm_ctx->esm_ctx.esm_proc_data->pco.num_protocol_or_container_id ) ? &emm_ctx->esm_ctx.esm_proc_data->pco:NULL,
-        &esm_cause);
+
+    /*emm_ctx->esm_ctx.esm_proc_data->pdn_cid = pdn_cid;*/
+    /*emm_ctx->esm_ctx.esm_proc_data->bearer_qos.qci       = apn_config->subscribed_qos.qci;*/
+    /*emm_ctx->esm_ctx.esm_proc_data->bearer_qos.pci       = apn_config->subscribed_qos.allocation_retention_priority.pre_emp_capability;*/
+    /*emm_ctx->esm_ctx.esm_proc_data->bearer_qos.pl        = apn_config->subscribed_qos.allocation_retention_priority.priority_level;*/
+    /*emm_ctx->esm_ctx.esm_proc_data->bearer_qos.pvi       = apn_config->subscribed_qos.allocation_retention_priority.pre_emp_vulnerability;*/
+    /*emm_ctx->esm_ctx.esm_proc_data->bearer_qos.gbr.br_ul = 0;*/
+    /*emm_ctx->esm_ctx.esm_proc_data->bearer_qos.gbr.br_dl = 0;*/
+    /*emm_ctx->esm_ctx.esm_proc_data->bearer_qos.mbr.br_ul = 0;*/
+    /*emm_ctx->esm_ctx.esm_proc_data->bearer_qos.mbr.br_dl = 0;*/
+
+      esm_p->esm_proc_data->pdn_cid = pdn_cid;
+      esm_p->esm_proc_data->bearer_qos.qci       = apn_config->subscribed_qos.qci;
+      esm_p->esm_proc_data->bearer_qos.pci       = apn_config->subscribed_qos.allocation_retention_priority.pre_emp_capability;
+      esm_p->esm_proc_data->bearer_qos.pl        = apn_config->subscribed_qos.allocation_retention_priority.priority_level;
+      esm_p->esm_proc_data->bearer_qos.pvi       = apn_config->subscribed_qos.allocation_retention_priority.pre_emp_vulnerability;
+      esm_p->esm_proc_data->bearer_qos.gbr.br_ul = 0;
+      esm_p->esm_proc_data->bearer_qos.gbr.br_dl = 0;
+      esm_p->esm_proc_data->bearer_qos.mbr.br_ul = 0;
+      esm_p->esm_proc_data->bearer_qos.mbr.br_dl = 0;
+      // TODO  "Better to throw emm_ctx->esm_ctx.esm_proc_data as a parameter or as a hidden parameter ?"
+      //
+      //
+
+
+      /*rc = esm_proc_pdn_connectivity_request (emm_ctx,*/
+              /*emm_ctx->esm_ctx.esm_proc_data->pti,*/
+              /*emm_ctx->esm_ctx.esm_proc_data->pdn_cid,*/
+              /*apn_config->context_identifier,*/
+              /*emm_ctx->esm_ctx.esm_proc_data->request_type,*/
+              /*emm_ctx->esm_ctx.esm_proc_data->apn,*/
+              /*emm_ctx->esm_ctx.esm_proc_data->pdn_type,*/
+              /*emm_ctx->esm_ctx.esm_proc_data->pdn_addr,*/
+              /*&emm_ctx->esm_ctx.esm_proc_data->bearer_qos,*/
+              /*(emm_ctx->esm_ctx.esm_proc_data->pco.num_protocol_or_container_id ) ? &emm_ctx->esm_ctx.esm_proc_data->pco:NULL,*/
+              /*&esm_cause);*/
+
+      rc = esm_proc_pdn_connectivity_request (emm_ctx,
+              esm_p->esm_proc_data->pti,
+              esm_p->esm_proc_data->pdn_cid,
+              apn_config->context_identifier,
+            esm_p->esm_proc_data->request_type,
+            esm_p->esm_proc_data->apn,
+            esm_p->esm_proc_data->pdn_type,
+            esm_p->esm_proc_data->pdn_addr,
+              &esm_p->esm_proc_data->bearer_qos,
+              (esm_p->esm_proc_data->pco.num_protocol_or_container_id ) ? &esm_p->esm_proc_data->pco:NULL,
+              &esm_cause);
 
     if (rc != RETURNerror) {
       /*
        * Create local default EPS bearer context
        */
       if ((!is_pdn_connectivity) || ((is_pdn_connectivity) && (EPS_BEARER_IDENTITY_UNASSIGNED == ue_mm_context->pdn_contexts[pdn_cid]->default_ebi))) {
-        rc = esm_proc_default_eps_bearer_context (emm_ctx, emm_ctx->esm_ctx.esm_proc_data->pti, pdn_cid, &new_ebi, emm_ctx->esm_ctx.esm_proc_data->bearer_qos.qci, &esm_cause);
+        /*rc = esm_proc_default_eps_bearer_context (emm_ctx, emm_ctx->esm_ctx.esm_proc_data->pti, pdn_cid, &new_ebi, emm_ctx->esm_ctx.esm_proc_data->bearer_qos.qci, &esm_cause);*/
+        rc = esm_proc_default_eps_bearer_context (emm_ctx, esm_p->esm_proc_data->pti, pdn_cid, &new_ebi, esm_p->esm_proc_data->bearer_qos.qci, &esm_cause);
       }
 
       if (rc != RETURNerror) {
@@ -278,8 +310,10 @@ static int _emm_cn_pdn_config_res (emm_cn_pdn_config_res_t * msg_pP)
       OAILOG_FUNC_RETURN (LOG_NAS_EMM, rc);
     }
     if (!is_pdn_connectivity) {
-      nas_itti_pdn_connectivity_req (emm_ctx->esm_ctx.esm_proc_data->pti, msg_pP->ue_id, pdn_cid, &emm_ctx->_imsi,
-        emm_ctx->esm_ctx.esm_proc_data, emm_ctx->esm_ctx.esm_proc_data->request_type);
+      /*nas_itti_pdn_connectivity_req (emm_ctx->esm_ctx.esm_proc_data->pti, msg_pP->ue_id, pdn_cid, &emm_ctx->_imsi,*/
+      nas_itti_pdn_connectivity_req (esm_p->esm_proc_data->pti, msg_pP->ue_id, pdn_cid, &emm_ctx->_imsi,
+        /*emm_ctx->esm_ctx.esm_proc_data, emm_ctx->esm_ctx.esm_proc_data->request_type);*/
+        esm_p->esm_proc_data, esm_p->esm_proc_data->request_type);
     } else {
 
     }
@@ -472,36 +506,36 @@ static int _emm_cn_pdn_connectivity_fail (const emm_cn_pdn_fail_t * msg)
   int                                     rc = RETURNok;
   struct emm_context_s                   *emm_ctx_p = NULL;
   ESM_msg                                 esm_msg = {.header = {0}};
-  int                                     esm_cause; 
+  int                                     esm_cause;
   emm_ctx_p = emm_context_get (&_emm_data, msg->ue_id);
   if (emm_ctx_p == NULL) {
     OAILOG_ERROR (LOG_NAS_EMM, "EMMCN-SAP  - " "Failed to find UE associated to id " MME_UE_S1AP_ID_FMT "...\n", msg->ue_id);
     OAILOG_FUNC_RETURN (LOG_NAS_EMM, rc);
   }
   memset (&esm_msg, 0, sizeof (ESM_msg));
-  
+
   // Map S11 cause to ESM cause
   switch (msg->cause) {
     case CAUSE_CONTEXT_NOT_FOUND:
-      esm_cause = ESM_CAUSE_REQUEST_REJECTED_BY_GW; 
+      esm_cause = ESM_CAUSE_REQUEST_REJECTED_BY_GW;
       break;
     case CAUSE_INVALID_MESSAGE_FORMAT:
-      esm_cause = ESM_CAUSE_REQUEST_REJECTED_BY_GW; 
+      esm_cause = ESM_CAUSE_REQUEST_REJECTED_BY_GW;
       break;
-    case CAUSE_SERVICE_NOT_SUPPORTED:                  
+    case CAUSE_SERVICE_NOT_SUPPORTED:
       esm_cause = ESM_CAUSE_SERVICE_OPTION_NOT_SUPPORTED;
       break;
-    case CAUSE_SYSTEM_FAILURE:                        
-      esm_cause = ESM_CAUSE_NETWORK_FAILURE; 
+    case CAUSE_SYSTEM_FAILURE:
+      esm_cause = ESM_CAUSE_NETWORK_FAILURE;
       break;
-    case CAUSE_NO_RESOURCES_AVAILABLE:           
-      esm_cause = ESM_CAUSE_INSUFFICIENT_RESOURCES; 
-      break;
-    case CAUSE_ALL_DYNAMIC_ADDRESSES_OCCUPIED:  
+    case CAUSE_NO_RESOURCES_AVAILABLE:
       esm_cause = ESM_CAUSE_INSUFFICIENT_RESOURCES;
       break;
-    default: 
-      esm_cause = ESM_CAUSE_REQUEST_REJECTED_BY_GW; 
+    case CAUSE_ALL_DYNAMIC_ADDRESSES_OCCUPIED:
+      esm_cause = ESM_CAUSE_INSUFFICIENT_RESOURCES;
+      break;
+    default:
+      esm_cause = ESM_CAUSE_REQUEST_REJECTED_BY_GW;
       break;
   }
 
@@ -593,7 +627,7 @@ int emm_cn_send (const emm_cn_t * msg)
   case EMMCN_PDN_CONNECTIVITY_FAIL:
     rc = _emm_cn_pdn_connectivity_fail (msg->u.emm_cn_pdn_fail);
     break;
-  
+
   case EMMCN_ACTIVATE_DEDICATED_BEARER_REQ:
     rc = _emm_cn_activate_dedicated_bearer_req (msg->u.activate_dedicated_bearer_req);
     break;

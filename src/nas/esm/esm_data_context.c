@@ -2,9 +2,9 @@
  * Licensed to the OpenAirInterface (OAI) Software Alliance under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The OpenAirInterface Software Alliance licenses this file to You under 
+ * The OpenAirInterface Software Alliance licenses this file to You under
  * the Apache License, Version 2.0  (the "License"); you may not use this file
- * except in compliance with the License.  
+ * except in compliance with the License.
  * You may obtain a copy of the License at
  *
  *      http://www.apache.org/licenses/LICENSE-2.0
@@ -132,9 +132,18 @@ void nas_stop_T3489(esm_context_t * const esm_ctx)
   }
 }
 
+
+void esm_nas_stop_T3489(struct guti_s guti)//已经将所有的nas_stop_T3489调用全部改为esm_nas_stop_T3489函数调用
+{
+    struct esm_context_s* esm_p;
+    esm_get_inplace(guti,&esm_p);
+    nas_stop_T3489(esm_p);
+    esm_remove(guti);
+}
+
 // free allocated structs
 //------------------------------------------------------------------------------
-void free_esm_context_content(esm_context_t * esm_ctx)
+void free_esm_context_content(esm_context_t * esm_ctx)//这个函数没人调用过？没有找到调用位置
 {
   if (esm_ctx) {
     nas_stop_T3489(esm_ctx);
@@ -144,9 +153,9 @@ void free_esm_context_content(esm_context_t * esm_ctx)
 //------------------------------------------------------------------------------
 void esm_init_context(struct esm_context_s *esm_context)
 {
-  emm_context_t        *emm_context   = PARENT_STRUCT(esm_context, struct emm_context_s, esm_ctx);
-  ue_mm_context_t      *ue_mm_context = PARENT_STRUCT(emm_context, struct ue_mm_context_s, emm_context);
-  OAILOG_DEBUG (LOG_NAS_ESM, "ESM-CTX - Init UE id " MME_UE_S1AP_ID_FMT "\n", ue_mm_context->mme_ue_s1ap_id);
+  /*emm_context_t        *emm_context   = PARENT_STRUCT(esm_context, struct emm_context_s, esm_ctx);*/
+  /*ue_mm_context_t      *ue_mm_context = PARENT_STRUCT(emm_context, struct ue_mm_context_s, emm_context);*/
+  /*OAILOG_DEBUG (LOG_NAS_ESM, "ESM-CTX - Init UE id " MME_UE_S1AP_ID_FMT "\n", ue_mm_context->mme_ue_s1ap_id);*/
   memset(esm_context, 0, sizeof(*esm_context));
   esm_context->T3489.id        = NAS_TIMER_INACTIVE_ID;
   esm_context->T3489.sec       = mme_config.nas_config.t3489_sec;

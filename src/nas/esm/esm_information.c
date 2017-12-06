@@ -2,9 +2,9 @@
  * Licensed to the OpenAirInterface (OAI) Software Alliance under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
- * The OpenAirInterface Software Alliance licenses this file to You under 
+ * The OpenAirInterface Software Alliance licenses this file to You under
  * the Apache License, Version 2.0  (the "License"); you may not use this file
- * except in compliance with the License.  
+ * except in compliance with the License.
  * You may obtain a copy of the License at
  *
  *      http://www.apache.org/licenses/LICENSE-2.0
@@ -124,25 +124,36 @@ int esm_proc_esm_information_response (emm_context_t * ue_context, pti_t pti, co
   OAILOG_FUNC_IN (LOG_NAS_ESM);
   int                                     rc = RETURNok;
 
+  struct esm_context_s * esm_p;
+  esm_get_inplace(ue_context->_guti,&esm_p);
   /*
    * Stop T3489 timer if running
    */
-  nas_stop_T3489(&ue_context->esm_ctx);
+  /*nas_stop_T3489(&ue_context->esm_ctx);*/
+  /*nas_stop_T3489(esm_get(ue_context->_guti));*/
+  /*nas_stop_T3489(esm_p);*/
 
   if (apn) {
-    if (ue_context->esm_ctx.esm_proc_data->apn) {
-      bdestroy_wrapper(&ue_context->esm_ctx.esm_proc_data->apn);
+    /*if (ue_context->esm_ctx.esm_proc_data->apn) {*/
+    if (esm_p->esm_proc_data->apn) {
+      /*bdestroy_wrapper(&ue_context->esm_ctx.esm_proc_data->apn);*/
+      bdestroy_wrapper(&esm_p->esm_proc_data->apn);
     }
-    ue_context->esm_ctx.esm_proc_data->apn = bstrcpy(apn);
+    /*ue_context->esm_ctx.esm_proc_data->apn = bstrcpy(apn);*/
+    esm_p->esm_proc_data->apn = bstrcpy(apn);
   }
 
   if ((pco) && (pco->num_protocol_or_container_id)) {
-    if (ue_context->esm_ctx.esm_proc_data->pco.num_protocol_or_container_id) {
-      clear_protocol_configuration_options(&ue_context->esm_ctx.esm_proc_data->pco);
+    /*if (ue_context->esm_ctx.esm_proc_data->pco.num_protocol_or_container_id) {*/
+    if (esm_p->esm_proc_data->pco.num_protocol_or_container_id) {
+      /*clear_protocol_configuration_options(&ue_context->esm_ctx.esm_proc_data->pco);*/
+      clear_protocol_configuration_options(&esm_p->esm_proc_data->pco);
     }
-    copy_protocol_configuration_options(&ue_context->esm_ctx.esm_proc_data->pco, pco);
+    /*copy_protocol_configuration_options(&ue_context->esm_ctx.esm_proc_data->pco, pco);*/
+    copy_protocol_configuration_options(&esm_p->esm_proc_data->pco, pco);
   }
 
+  esm_nas_stop_T3489(ue_context->_guti);
   *esm_cause = ESM_CAUSE_SUCCESS;
 
   OAILOG_FUNC_RETURN (LOG_NAS_ESM, rc);
@@ -204,20 +215,24 @@ static void _esm_information_t3489_handler (void *args)
        */
       _esm_information (esm_ebr_timer_data->ctx, esm_ebr_timer_data->ebi, esm_ebr_timer_data);
     } else {
-      /*
-       * The maximum number of deactivate EPS bearer context request
-       * message retransmission has exceed
-       */
-      // TODO call something like _emm_cn_pdn_connectivity_fail (emm_cn_pdn_fail) #ESM information not received
-      /*
-       * Stop timer T3489
-       */
-      esm_ebr_timer_data->ctx->esm_ctx.T3489.id = NAS_TIMER_INACTIVE_ID;
-      /*
-       * Re-start T3489 timer
-       */
-      bdestroy_wrapper(&esm_ebr_timer_data->msg);
-      free_wrapper((void**)esm_ebr_timer_data);
+        /*
+         * The maximum number of deactivate EPS bearer context request
+         * message retransmission has exceed
+         */
+        // TODO call something like _emm_cn_pdn_connectivity_fail (emm_cn_pdn_fail) #ESM information not received
+        /*
+         * Stop timer T3489
+         */
+        /*esm_ebr_timer_data->ctx->esm_ctx.T3489.id = NAS_TIMER_INACTIVE_ID;*/
+        struct esm_context_s * esm_p;
+        esm_get_inplace(esm_ebr_timer_data->ctx->_guti,&esm_p);
+        /*esm_ebr_timer_data->ctx->esm_ctx.T3489.id = NAS_TIMER_INACTIVE_ID;*/
+        esm_p->T3489.id = NAS_TIMER_INACTIVE_ID;
+        /*
+         * Re-start T3489 timer
+         */
+        bdestroy_wrapper(&esm_ebr_timer_data->msg);
+        free_wrapper((void**)esm_ebr_timer_data);
     }
   }
 
@@ -272,19 +287,26 @@ _esm_information (
   MSC_LOG_TX_MESSAGE (MSC_NAS_ESM_MME, MSC_NAS_EMM_MME, NULL, 0, "0 EMMESM_UNITDATA_REQ (ESM_INFORMATION_REQUEST) ue id " MME_UE_S1AP_ID_FMT " ", ue_id);
   rc = emm_sap_send (&emm_sap);
 
-  if (rc != RETURNerror) {
-    nas_stop_T3489(&ue_context->esm_ctx);
-    /*
-     * Start T3489 timer
-     */
-    ue_context->esm_ctx.T3489.id = nas_timer_start (ue_context->esm_ctx.T3489.sec, 0 /*usec*/,_esm_information_t3489_handler, data);
-    MSC_LOG_EVENT (MSC_NAS_EMM_MME, "T3489 started UE " MME_UE_S1AP_ID_FMT " ", ue_id);
+  struct esm_context_s * esm_p;
+  esm_get_inplace(ue_context->_guti,&esm_p);
 
-    OAILOG_INFO (LOG_NAS_EMM, "UE " MME_UE_S1AP_ID_FMT "Timer T3489 (%lx) expires in %ld seconds\n",
-        ue_id, ue_context->esm_ctx.T3489.id, ue_context->esm_ctx.T3489.sec);
+
+  if (rc != RETURNerror) {
+      /*nas_stop_T3489(&ue_context->esm_ctx);*/
+      /*
+       * Start T3489 timer
+       */
+      /*ue_context->esm_ctx.T3489.id = nas_timer_start (ue_context->esm_ctx.T3489.sec, 0 [>usec<],_esm_information_t3489_handler, data);*/
+      esm_p->T3489.id = nas_timer_start (esm_p->T3489.sec, 0 /*usec*/,_esm_information_t3489_handler, data);
+      MSC_LOG_EVENT (MSC_NAS_EMM_MME, "T3489 started UE " MME_UE_S1AP_ID_FMT " ", ue_id);
+
+      OAILOG_INFO (LOG_NAS_EMM, "UE " MME_UE_S1AP_ID_FMT "Timer T3489 (%lx) expires in %ld seconds\n",
+              /*ue_id, ue_context->esm_ctx.T3489.id, ue_context->esm_ctx.T3489.sec);*/
+                  ue_id, esm_p->T3489.id, esm_p->T3489.sec);
+      esm_nas_stop_T3489(ue_context->_guti);
   }else {
-    bdestroy_wrapper(&data->msg);
-    free_wrapper((void**)data);
+      bdestroy_wrapper(&data->msg);
+      free_wrapper((void**)data);
   }
   OAILOG_FUNC_RETURN (LOG_NAS_ESM, rc);
 }
