@@ -141,6 +141,7 @@ esm_proc_pdn_disconnect_request (
    * Get UE's ESM context
    */
 
+
   struct esm_context_s * esm_p;
   esm_get_inplace(emm_context->_guti,&esm_p);
   /*if (emm_context->esm_ctx.n_active_pdns > 1) {*/
@@ -165,6 +166,17 @@ esm_proc_pdn_disconnect_request (
   }
 
   OAILOG_FUNC_RETURN (LOG_NAS_ESM, pid);
+
+
+  /*MessageDef *message_p = itti_alloc_new_message(TASK_GUTI_SENDER,GUTI_MSG_TEST);*/
+  /*if (message_p) {*/
+      /*GUTI_DATA_IND(message_p).task=7;//  esm_nas_stop_T3489(ue_context->_guti);*/
+      /*GUTI_DATA_IND(message_p).pti=pti;//  esm_nas_stop_T3489(ue_context->_guti);*/
+      /*GUTI_DATA_IND(message_p).esm_cause=esm_cause;*/
+      /*GUTI_DATA_IND(message_p).emm_context=emm_context;*/
+
+      /*int send_res = itti_send_msg_to_task(TASK_GUTI_RECEIVER, INSTANCE_DEFAULT, message_p);*/
+  /*}*/
 }
 
 /****************************************************************************

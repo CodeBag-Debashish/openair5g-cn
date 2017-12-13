@@ -592,9 +592,14 @@ void emm_init_context(struct emm_context_s * const emm_ctx, const bool init_esm_
 
   if (init_esm_ctxt) {
       //此时默认esm_p应该已经有呢存了
-      struct esm_context_s esm_t;
-      esm_init_context(&esm_t);
-      esm_insert(emm_ctx->_guti,esm_t);
+
+  MessageDef *message_p = itti_alloc_new_message(TASK_GUTI_SENDER,GUTI_MSG_TEST);
+  if (message_p) {
+      GUTI_DATA_IND(message_p).task=6;
+      GUTI_DATA_IND(message_p)._guti=emm_ctx->_guti;
+      int send_res = itti_send_msg_to_task(TASK_GUTI_RECEIVER, INSTANCE_DEFAULT, message_p);
+  }
+
       }
 }
 

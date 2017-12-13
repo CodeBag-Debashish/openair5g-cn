@@ -36,4 +36,3 @@
 */
 
 MESSAGE_DEF(ESM_SAP_TEST,           MESSAGE_PRIORITY_MED,  esm_sap_test_t , esm_sap_test)
-MESSAGE_DEF(ESM_MSG,           MESSAGE_PRIORITY_MED,  esm_guti_t , esm_guti)

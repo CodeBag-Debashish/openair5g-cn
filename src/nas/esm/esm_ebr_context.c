@@ -117,13 +117,10 @@ esm_ebr_context_create (
   protocol_configuration_options_t * pco)
 {
   int                                     bidx = 0;
-  /*esm_context_t                          *esm_ctx = NULL;*/
   esm_context_t                          *esm_ctx = NULL;
   esm_pdn_t                              *pdn = NULL;
 
   OAILOG_FUNC_IN (LOG_NAS_ESM);
-  /*esm_ctx = &emm_context->esm_ctx;*/
-  esm_ctx ;
   esm_get_inplace(emm_context->_guti,&esm_ctx);
   ue_mm_context_t      *ue_mm_context = PARENT_STRUCT(emm_context, struct ue_mm_context_s, emm_context);
 
@@ -311,11 +308,7 @@ esm_ebr_context_release (
     if (*pid < MAX_APN_PER_UE) {
       if (!ue_mm_context->pdn_contexts[*pid]) {
         OAILOG_ERROR(LOG_NAS_ESM , "ESM-PROC  - PDN connection identifier %d " "is not valid\n", *pid);
-      } /*else if (!ue_mm_context->active_pdn_contexts[*pid]->esm_data.is_active) {
-        OAILOG_WARNING (LOG_NAS_ESM , "ESM-PROC  - PDN connection %d is not active\n", *pid);
-      } else if (esm_ctx->pdn[*pid].data == NULL) {
-        OAILOG_ERROR(LOG_NAS_ESM , "ESM-PROC  - PDN connection %d has not been " "allocated\n", *pid);
-      } */ else {
+      }  else {
 
         if (ue_mm_context->pdn_contexts[*pid]->bearer_contexts[*bid] ) {
           pdn = &ue_mm_context->pdn_contexts[*pid]->esm_data;
@@ -411,12 +404,6 @@ esm_ebr_context_release (
       }
     }
 
-    //if (esm_ctx->n_active_ebrs == 0) {
-      /*
-       * TODO: Release the PDN connection and marked the UE as inactive
-       * * * * in the network for EPS services (is_attached = false)
-       */
-    //}
 
     OAILOG_FUNC_RETURN (LOG_NAS_ESM, ebi);
   }

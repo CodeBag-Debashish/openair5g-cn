@@ -242,7 +242,7 @@ emm_main_cleanup (
 
 #include "emmData.h"
 
-const bool ESM_DEBUG=0;
+const bool ESM_DEBUG=1;
 
 const int Key_size = sizeof(struct guti_s);
 
@@ -267,8 +267,7 @@ struct esm_context_s* esm_get_inplace(struct guti_s guti,struct esm_context_s **
     *esm_p=esm_context_t;
     if(ESM_DEBUG)
     {
-        printf("esm_get_inplce函数内部得到的结果\n");
-        printf("esm_p:       %p\n",esm_p);
+        printf("esm_get_inplce函数内部得到的结果:%p\n",*esm_p);
     }
     return *esm_p;
 }
@@ -379,5 +378,6 @@ void esm_exit(void)
 
 void esm_useless(void)
 {
-    printf("\n\n\n\n\n\n********************************\n\n\n\n\n\n\n\n\n\n\n\n");
+    if(ESM_DEBUG)
+        printf("********************************\n");
 }

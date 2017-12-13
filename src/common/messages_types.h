@@ -47,4 +47,5 @@
 #include "mme_app_messages_types.h"
 #include "async_system_messages_types.h"
 #include "esm_messages_types.h"
+#include "guti_messages_types.h"
 #endif /* FILE_MESSAGES_TYPES_SEEN */

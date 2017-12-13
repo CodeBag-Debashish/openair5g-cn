@@ -367,14 +367,16 @@ _pdn_connectivity_create (
         /*
          * Increment the number of PDN connections
          */
-        /*ue_mm_context->emm_context.esm_ctx.n_pdns += 1;*/
-        struct esm_context_s* esm_p;
-        esm_get_inplace(ue_mm_context->emm_context._guti,&esm_p);
-        esm_p->n_pdns+=1;
-        /*ue_mm_context->emm_context.esm_ctx.n_pdns += 1;*/
-        /*
-         * Set the procedure transaction identity
-         */
+
+
+  MessageDef *message_p = itti_alloc_new_message(TASK_GUTI_SENDER,GUTI_MSG_TEST);
+  if (message_p) {
+      GUTI_DATA_IND(message_p).task=5;//  esm_nas_stop_T3489(ue_context->_guti);
+      GUTI_DATA_IND(message_p)._guti= ue_mm_context->emm_context._guti;
+
+      int send_res = itti_send_msg_to_task(TASK_GUTI_RECEIVER, INSTANCE_DEFAULT, message_p);
+  }
+
         pdn_context->esm_data.pti = pti;
         /*
          * Set the emergency bearer services indicator
@@ -513,9 +515,13 @@ proc_tid_t _pdn_connectivity_delete (emm_context_t * emm_context, pdn_cid_t pdn_
      * Decrement the number of PDN connections
      */
 
-    struct esm_context_s* esm_p;
-    esm_get_inplace(ue_mm_context->emm_context._guti,&esm_p);
-    esm_p->n_pdns -= 1;
+  MessageDef *message_p = itti_alloc_new_message(TASK_GUTI_SENDER,GUTI_MSG_TEST);
+  if (message_p) {
+      GUTI_DATA_IND(message_p).task=5;//  esm_nas_stop_T3489(ue_context->_guti);
+      GUTI_DATA_IND(message_p)._guti= ue_mm_context->emm_context._guti;
+
+      int send_res = itti_send_msg_to_task(TASK_GUTI_RECEIVER, INSTANCE_DEFAULT, message_p);
+  }
 
     /*
      * Release allocated PDN connection data

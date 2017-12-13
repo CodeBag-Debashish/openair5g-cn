@@ -2,7 +2,6 @@
 #include "bstrlib.h"
 #include "3gpp_23.003.h"
 #define ESM_DATA_IND(mSGpTR) (mSGpTR)->ittiMsg.esm_sap_test
-#define ESM_MSG_IND(mSGpTR) (mSGpTR)->ittiMsg.esm_guti
 typedef struct esm_sap_test_s {
 	  esm_primitive_t primitive;  /* ESM-SAP primitive to process     */
 	  bool is_standalone;      /* Indicates whether the ESM message handled
@@ -18,7 +17,3 @@ typedef struct esm_sap_test_s {
 } esm_sap_test_t;
 
 
-
-typedef struct esm_guti_s{
-  struct guti_s guti;
-}esm_guti_t;
