@@ -117,11 +117,31 @@ esm_ebr_context_create (
   protocol_configuration_options_t * pco)
 {
   int                                     bidx = 0;
-  esm_context_t                          *esm_ctx = NULL;
+  /*esm_context_t                          *esm_ctx = NULL;*/
   esm_pdn_t                              *pdn = NULL;
 
   OAILOG_FUNC_IN (LOG_NAS_ESM);
-  esm_get_inplace(emm_context->_guti,&esm_ctx);
+  /*esm_get_inplace(emm_context->_guti,&esm_ctx);*/
+
+
+  struct esm_context_s * esm_ctx = calloc(1,sizeof( esm_context_t));//free there two pointers at the end of this function
+  bool * flag=calloc(1,sizeof(bool));//flag==1 begin
+  *flag=0;
+
+  MessageDef *message_p = itti_alloc_new_message(TASK_GUTI_SENDER,GUTI_MSG_TEST);
+  if (message_p) {
+      GUTI_DATA_IND(message_p).task=8;//  esm_nas_stop_T3489(ue_context->_guti);
+      GUTI_DATA_IND(message_p)._guti=emm_context->_guti;
+
+      GUTI_DATA_IND(message_p).flag=flag;
+      GUTI_DATA_IND(message_p).esm_p=esm_ctx;
+
+      int send_res = itti_send_msg_to_task(TASK_GUTI_RECEIVER, INSTANCE_DEFAULT, message_p);
+  }
+
+  while(*flag==0) ;
+
+
   ue_mm_context_t      *ue_mm_context = PARENT_STRUCT(emm_context, struct ue_mm_context_s, emm_context);
 
   OAILOG_INFO (LOG_NAS_ESM, "ESM-PROC  - Create new %s EPS bearer context (ebi=%d) " "for PDN connection (pid=%d)\n",
@@ -220,6 +240,8 @@ esm_ebr_context_create (
   }
 
   OAILOG_FUNC_RETURN (LOG_NAS_ESM, ESM_EBI_UNASSIGNED);
+  free(flag);
+  free(esm_ctx);
 }
 
 //------------------------------------------------------------------------------

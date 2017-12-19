@@ -142,41 +142,17 @@ esm_proc_pdn_disconnect_request (
    */
 
 
-  struct esm_context_s * esm_p;
-  esm_get_inplace(emm_context->_guti,&esm_p);
-  /*if (emm_context->esm_ctx.n_active_pdns > 1) {*/
-  if (esm_p->n_active_pdns > 1) {
-    /*
-     * Get the identifier of the PDN connection entry assigned to the
-     * * * * procedure transaction identity
-     */
-    pid = _pdn_disconnect_get_pid (emm_context, pti);
 
-    if (pid >= MAX_APN_PER_UE) {
-      OAILOG_ERROR (LOG_NAS_ESM, "ESM-PROC  - No PDN connection found (pti=%d)\n", pti);
-      *esm_cause = ESM_CAUSE_PROTOCOL_ERROR;
-      OAILOG_FUNC_RETURN (LOG_NAS_ESM, RETURNerror);
-    }
-  } else {
-    /*
-     * Attempt to disconnect from the last PDN disconnection
-     * * * * is not allowed
-     */
-    *esm_cause = ESM_CAUSE_LAST_PDN_DISCONNECTION_NOT_ALLOWED;
+
+  MessageDef *message_p = itti_alloc_new_message(TASK_GUTI_SENDER,GUTI_MSG_TEST);
+  if (message_p) {
+      GUTI_DATA_IND(message_p).task=7;//  esm_nas_stop_T3489(ue_context->_guti);
+      GUTI_DATA_IND(message_p).pti=pti;//  esm_nas_stop_T3489(ue_context->_guti);
+      GUTI_DATA_IND(message_p).esm_cause=esm_cause;
+      GUTI_DATA_IND(message_p).emm_context=emm_context;
+
+      int send_res = itti_send_msg_to_task(TASK_GUTI_RECEIVER, INSTANCE_DEFAULT, message_p);
   }
-
-  OAILOG_FUNC_RETURN (LOG_NAS_ESM, pid);
-
-
-  /*MessageDef *message_p = itti_alloc_new_message(TASK_GUTI_SENDER,GUTI_MSG_TEST);*/
-  /*if (message_p) {*/
-      /*GUTI_DATA_IND(message_p).task=7;//  esm_nas_stop_T3489(ue_context->_guti);*/
-      /*GUTI_DATA_IND(message_p).pti=pti;//  esm_nas_stop_T3489(ue_context->_guti);*/
-      /*GUTI_DATA_IND(message_p).esm_cause=esm_cause;*/
-      /*GUTI_DATA_IND(message_p).emm_context=emm_context;*/
-
-      /*int send_res = itti_send_msg_to_task(TASK_GUTI_RECEIVER, INSTANCE_DEFAULT, message_p);*/
-  /*}*/
 }
 
 /****************************************************************************

@@ -254,15 +254,7 @@ static obj_hash_table_t * esm_hash_pointer = NULL;
 struct esm_context_s* esm_get_inplace(struct guti_s guti,struct esm_context_s **esm_p)
 {
     struct esm_context_s *esm_context_t=NULL;
-    /*struct guti_s* g_p = (struct guit_s *)malloc(sizeof(struct guti_s));*/
-    /*memcpy(g_p,&guti,sizeof(struct guti_s));*/
-    /*obj_hashtable_get(esm_hash_pointer,g_p,Key_size,(void **)&esm_context_t);*/
-    /*obj_hashtable_get(esm_hash_pointer,&guti,Key_size,(void **)&esm_context_t);*/
     obj_hashtable_get(esm_hash_pointer,&guti,Key_size,(void **)&esm_context_t);
-    /*obj_hashtable_get(esm_hash_pointer,&guti,Key_size,(void **)&esm_p);*/
-    /*free(g_p);*/
-    /*esm_p= malloc(sizeof(esm_context_t));*/
-    /*memcpy(esm_p,esm_context_t,sizeof(esm_context_t));*/
 
     *esm_p=esm_context_t;
     if(ESM_DEBUG)
@@ -297,6 +289,7 @@ int esm_insert(struct guti_s guti_t, struct esm_context_s esm_context_t)
         {
             printf("这个是插入时取出的结果:\n");
                   printf("wo get p:             %p      \n",p);
+                  printf("wo get p->esm_proc_data:             %p      \n",p->esm_proc_data);
                   printf("n_pnds                %d      \n",p->n_pdns);
         }else
         {

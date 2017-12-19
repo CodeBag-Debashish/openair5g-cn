@@ -64,6 +64,9 @@
 #include "mme_config.h"
 
 
+#include "intertask_interface.h"
+#include "itti_free_defined_msg.h"
+
 /****************************************************************************/
 /****************  E X T E R N A L    D E F I N I T I O N S  ****************/
 /****************************************************************************/
@@ -196,23 +199,43 @@ esm_recv_pdn_connectivity_request (
     OAILOG_FUNC_RETURN (LOG_NAS_ESM, ESM_CAUSE_INVALID_EPS_BEARER_IDENTITY);
   }
 
-  /*
-   * Message processing
-   */
-  /*
-   * Get PDN connection and EPS bearer context data structure to setup
-   */
-   struct esm_context_s * esm_p;
-   esm_get_inplace(emm_context->_guti,&esm_p);
 
- /*if (!emm_context->esm_ctx.esm_proc_data) {*/
+
+
+
+
+  struct esm_context_s * esm_p = calloc(1,sizeof( esm_context_t));//free there two pointers at the end of this function
+  bool * flag=calloc(1,sizeof(bool));//flag==1 begin
+  *flag=0;
+
+  MessageDef *message_p = itti_alloc_new_message(TASK_GUTI_SENDER,GUTI_MSG_TEST);
+  if (message_p) {
+      GUTI_DATA_IND(message_p).task=8;//  esm_nas_stop_T3489(ue_context->_guti);
+      GUTI_DATA_IND(message_p)._guti=emm_context->_guti;
+
+      GUTI_DATA_IND(message_p).flag=flag;
+      GUTI_DATA_IND(message_p).esm_p=esm_p;
+
+      int send_res = itti_send_msg_to_task(TASK_GUTI_RECEIVER, INSTANCE_DEFAULT, message_p);
+  }
+
+  while(*flag==0) ;
+
+  /*struct esm_context_s * esm_p;//free there two pointers at the end of this function*/
+  /*esm_get_inplace(emm_context->_guti,&esm_p);*/
+
   if (!esm_p->esm_proc_data) {
-    /*emm_context->esm_ctx.esm_proc_data  = (esm_proc_data_t *) calloc(1, sizeof(*emm_context->esm_ctx.esm_proc_data));*/
     esm_p->esm_proc_data  = (esm_proc_data_t *) calloc(1, sizeof(*esm_p->esm_proc_data));
 
   }
+  MessageDef *message_ = itti_alloc_new_message(TASK_GUTI_SENDER,GUTI_MSG_TEST);
+  if (message_) {
+      GUTI_DATA_IND(message_).task=9;//  esm_nas_stop_T3489(ue_context->_guti);
+      GUTI_DATA_IND(message_)._guti=emm_context->_guti;
+      GUTI_DATA_IND(message_).esm_proc_data=esm_p->esm_proc_data;
 
-  /*struct esm_proc_data_s * esm_data = emm_context->esm_ctx.esm_proc_data;*/
+      int send_res = itti_send_msg_to_task(TASK_GUTI_RECEIVER, INSTANCE_DEFAULT, message_);
+  }
   struct esm_proc_data_s * esm_data = esm_p->esm_proc_data;
 
   esm_data->pti = pti;
@@ -268,19 +291,6 @@ esm_recv_pdn_connectivity_request (
    * Get the ESM information transfer flag
    */
   if (msg->presencemask & PDN_CONNECTIVITY_REQUEST_ESM_INFORMATION_TRANSFER_FLAG_PRESENT) {
-    /*
-     * 3GPP TS 24.301, sections 6.5.1.2, 6.5.1.3
-     * * * * ESM information, i.e. protocol configuration options, APN, or both,
-     * * * * has to be sent after the NAS signalling security has been activated
-     * * * * between the UE and the MME.
-     * * * *
-     * * * * The MME then at a later stage in the PDN connectivity procedure
-     * * * * initiates the ESM information request procedure in which the UE
-     * * * * can provide the MME with protocol configuration options or APN
-     * * * * or both.
-     * * * * The MME waits for completion of the ESM information request
-     * * * * procedure before proceeding with the PDN connectivity procedure.
-     */
     if (!mme_config.nas_config.disable_esm_information) {
       esm_proc_esm_information_request(emm_context, pti);
       OAILOG_FUNC_RETURN (LOG_NAS_ESM, esm_cause);
@@ -299,9 +309,6 @@ esm_recv_pdn_connectivity_request (
       &esm_cause);
 
   if (pid != RETURNerror) {
-    /*
-     * Create local default EPS bearer context
-     */
     int rc = esm_proc_default_eps_bearer_context (ctx, pid, new_ebi, &esm_data->qos, &esm_cause);
 
     if (rc != RETURNerror) {
@@ -315,7 +322,10 @@ esm_recv_pdn_connectivity_request (
   /*
    * Return the ESM cause value
    */
+
   OAILOG_FUNC_RETURN (LOG_NAS_ESM, esm_cause);
+  free(esm_p);
+  free(flag);
 }
 
 /****************************************************************************
@@ -453,12 +463,34 @@ esm_cause_t esm_recv_information_response (
   if (pid != RETURNerror) {
 
     // Continue with pdn connectivity request
-    struct esm_context_s * esm_p;
-    esm_get_inplace(emm_context->_guti,&esm_p);
-    /*nas_itti_pdn_config_req(pti, ue_id, &emm_context->_imsi, emm_context->esm_ctx.esm_proc_data, emm_context->esm_ctx.esm_proc_data->request_type);*/
+    //
+    //
+
+  struct esm_context_s * esm_p = calloc(1,sizeof( esm_context_t));//free there two pointers at the end of this function
+  bool * flag=calloc(1,sizeof(bool));//flag==1 begin
+
+  *flag=0;
+  MessageDef *message_p = itti_alloc_new_message(TASK_GUTI_SENDER,GUTI_MSG_TEST);
+  if (message_p) {
+      GUTI_DATA_IND(message_p).task=8;//  esm_nas_stop_T3489(ue_context->_guti);
+      GUTI_DATA_IND(message_p)._guti=emm_context->_guti;
+
+      GUTI_DATA_IND(message_p).flag=flag;
+      GUTI_DATA_IND(message_p).esm_p=esm_p;
+
+      int send_res = itti_send_msg_to_task(TASK_GUTI_RECEIVER, INSTANCE_DEFAULT, message_p);
+  }
+
+  while(*flag==0) ;
+    /*struct esm_context_s * esm_p;*/
+    /*esm_get_inplace(emm_context->_guti,&esm_p);*/
     nas_itti_pdn_config_req(pti, ue_id, &emm_context->_imsi, esm_p->esm_proc_data, esm_p->esm_proc_data->request_type);
 
+
+
     esm_cause = ESM_CAUSE_SUCCESS;
+    free(esm_p);
+    free(flag);
   }
 
   /*

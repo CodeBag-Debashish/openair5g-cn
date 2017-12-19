@@ -1,0 +1,4 @@
+./src/nas/esm/PdnDisconnect.c:  if (emm_context->esm_ctx.n_active_pdns > 1) {
+./src/nas/esm/esm_ebr_context.c:    //if (esm_ctx->n_active_ebrs == 0) {
+./src/nas/esm/sap/esm_recv.c:  if (!emm_context->esm_ctx.esm_proc_data) {
+./src/nas/emm/sap/emm_cn.c:  struct apn_configuration_s* apn_config = mme_app_select_apn(ue_mm_context, emm_ctx->esm_ctx.esm_proc_data->apn);

@@ -205,124 +205,114 @@ static int _emm_cn_pdn_config_res (emm_cn_pdn_config_res_t * msg_pP)
     OAILOG_FUNC_RETURN (LOG_NAS_EMM, rc);
   }
 
-  //----------------------------------------------------------------------------
-  // PDN selection here
-  // Because NAS knows APN selected by UE if any
-  // default APN selection
-  /*struct apn_configuration_s* apn_config = mme_app_select_apn(ue_mm_context, emm_ctx->esm_ctx.esm_proc_data->apn);*/
 
-  struct esm_context_s * esm_p;
-  esm_get_inplace(emm_ctx->_guti,&esm_p);
-  struct apn_configuration_s* apn_config = mme_app_select_apn(ue_mm_context, esm_p->esm_proc_data->apn);
+  struct esm_context_s * esm_p = calloc(1,sizeof( esm_context_t));//free there two pointers at the end of this function
+  bool * flag=calloc(1,sizeof(bool));//flag==1 begin
+  *flag=0;
 
-  if (!apn_config) {
-    /*
-     * Unfortunately we didn't find our default APN...
-     */
-    OAILOG_INFO (LOG_NAS_ESM, "No suitable APN found ue_id=" MME_UE_S1AP_ID_FMT ")\n",ue_mm_context->mme_ue_s1ap_id);
-    return RETURNerror;
+  MessageDef *message_p = itti_alloc_new_message(TASK_GUTI_SENDER,GUTI_MSG_TEST);
+  if (message_p) {
+      GUTI_DATA_IND(message_p).task=8;//  esm_nas_stop_T3489(ue_context->_guti);
+      GUTI_DATA_IND(message_p)._guti=emm_ctx->_guti;
+
+      GUTI_DATA_IND(message_p).flag=flag;
+      GUTI_DATA_IND(message_p).esm_p=esm_p;
+
+      int send_res = itti_send_msg_to_task(TASK_GUTI_RECEIVER, INSTANCE_DEFAULT, message_p);
   }
 
-  // search for an already set PDN context
-  for (pdn_cid = 0; pdn_cid < MAX_APN_PER_UE; pdn_cid++) {
-    if ((ue_mm_context->pdn_contexts[pdn_cid]) && (ue_mm_context->pdn_contexts[pdn_cid]->context_identifier == apn_config->context_identifier)) {
-      is_pdn_connectivity = true;
-      break;
+  while(*flag==0) ;
+  if(esm_p->esm_proc_data==NULL)
+      ;
+else
+{
+    struct apn_configuration_s* apn_config = mme_app_select_apn(ue_mm_context, esm_p->esm_proc_data->apn);
+
+    if (!apn_config) {
+        /*
+         * Unfortunately we didn't find our default APN...
+         */
+        OAILOG_INFO (LOG_NAS_ESM, "No suitable APN found ue_id=" MME_UE_S1AP_ID_FMT ")\n",ue_mm_context->mme_ue_s1ap_id);
+        return RETURNerror;
     }
-  }
 
-  if (pdn_cid >= MAX_APN_PER_UE) {
-    /*
-     * Search for an available PDN connection entry
-     */
+    // search for an already set PDN context
     for (pdn_cid = 0; pdn_cid < MAX_APN_PER_UE; pdn_cid++) {
-      if (!ue_mm_context->pdn_contexts[pdn_cid]) break;
-    }
-  }
-  if (pdn_cid < MAX_APN_PER_UE) {
-
-    /*
-     * Execute the PDN connectivity procedure requested by the UE
-     */
-
-    /*emm_ctx->esm_ctx.esm_proc_data->pdn_cid = pdn_cid;*/
-    /*emm_ctx->esm_ctx.esm_proc_data->bearer_qos.qci       = apn_config->subscribed_qos.qci;*/
-    /*emm_ctx->esm_ctx.esm_proc_data->bearer_qos.pci       = apn_config->subscribed_qos.allocation_retention_priority.pre_emp_capability;*/
-    /*emm_ctx->esm_ctx.esm_proc_data->bearer_qos.pl        = apn_config->subscribed_qos.allocation_retention_priority.priority_level;*/
-    /*emm_ctx->esm_ctx.esm_proc_data->bearer_qos.pvi       = apn_config->subscribed_qos.allocation_retention_priority.pre_emp_vulnerability;*/
-    /*emm_ctx->esm_ctx.esm_proc_data->bearer_qos.gbr.br_ul = 0;*/
-    /*emm_ctx->esm_ctx.esm_proc_data->bearer_qos.gbr.br_dl = 0;*/
-    /*emm_ctx->esm_ctx.esm_proc_data->bearer_qos.mbr.br_ul = 0;*/
-    /*emm_ctx->esm_ctx.esm_proc_data->bearer_qos.mbr.br_dl = 0;*/
-
-      esm_p->esm_proc_data->pdn_cid = pdn_cid;
-      esm_p->esm_proc_data->bearer_qos.qci       = apn_config->subscribed_qos.qci;
-      esm_p->esm_proc_data->bearer_qos.pci       = apn_config->subscribed_qos.allocation_retention_priority.pre_emp_capability;
-      esm_p->esm_proc_data->bearer_qos.pl        = apn_config->subscribed_qos.allocation_retention_priority.priority_level;
-      esm_p->esm_proc_data->bearer_qos.pvi       = apn_config->subscribed_qos.allocation_retention_priority.pre_emp_vulnerability;
-      esm_p->esm_proc_data->bearer_qos.gbr.br_ul = 0;
-      esm_p->esm_proc_data->bearer_qos.gbr.br_dl = 0;
-      esm_p->esm_proc_data->bearer_qos.mbr.br_ul = 0;
-      esm_p->esm_proc_data->bearer_qos.mbr.br_dl = 0;
-      // TODO  "Better to throw emm_ctx->esm_ctx.esm_proc_data as a parameter or as a hidden parameter ?"
-      //
-      //
-
-
-      /*rc = esm_proc_pdn_connectivity_request (emm_ctx,*/
-              /*emm_ctx->esm_ctx.esm_proc_data->pti,*/
-              /*emm_ctx->esm_ctx.esm_proc_data->pdn_cid,*/
-              /*apn_config->context_identifier,*/
-              /*emm_ctx->esm_ctx.esm_proc_data->request_type,*/
-              /*emm_ctx->esm_ctx.esm_proc_data->apn,*/
-              /*emm_ctx->esm_ctx.esm_proc_data->pdn_type,*/
-              /*emm_ctx->esm_ctx.esm_proc_data->pdn_addr,*/
-              /*&emm_ctx->esm_ctx.esm_proc_data->bearer_qos,*/
-              /*(emm_ctx->esm_ctx.esm_proc_data->pco.num_protocol_or_container_id ) ? &emm_ctx->esm_ctx.esm_proc_data->pco:NULL,*/
-              /*&esm_cause);*/
-
-      rc = esm_proc_pdn_connectivity_request (emm_ctx,
-              esm_p->esm_proc_data->pti,
-              esm_p->esm_proc_data->pdn_cid,
-              apn_config->context_identifier,
-            esm_p->esm_proc_data->request_type,
-            esm_p->esm_proc_data->apn,
-            esm_p->esm_proc_data->pdn_type,
-            esm_p->esm_proc_data->pdn_addr,
-              &esm_p->esm_proc_data->bearer_qos,
-              (esm_p->esm_proc_data->pco.num_protocol_or_container_id ) ? &esm_p->esm_proc_data->pco:NULL,
-              &esm_cause);
-
-    if (rc != RETURNerror) {
-      /*
-       * Create local default EPS bearer context
-       */
-      if ((!is_pdn_connectivity) || ((is_pdn_connectivity) && (EPS_BEARER_IDENTITY_UNASSIGNED == ue_mm_context->pdn_contexts[pdn_cid]->default_ebi))) {
-        /*rc = esm_proc_default_eps_bearer_context (emm_ctx, emm_ctx->esm_ctx.esm_proc_data->pti, pdn_cid, &new_ebi, emm_ctx->esm_ctx.esm_proc_data->bearer_qos.qci, &esm_cause);*/
-        rc = esm_proc_default_eps_bearer_context (emm_ctx, esm_p->esm_proc_data->pti, pdn_cid, &new_ebi, esm_p->esm_proc_data->bearer_qos.qci, &esm_cause);
-      }
-
-      if (rc != RETURNerror) {
-        esm_cause = ESM_CAUSE_SUCCESS;
-      }
-    } else {
-      unlock_ue_contexts(ue_mm_context);
-      OAILOG_FUNC_RETURN (LOG_NAS_EMM, rc);
-    }
-    if (!is_pdn_connectivity) {
-      /*nas_itti_pdn_connectivity_req (emm_ctx->esm_ctx.esm_proc_data->pti, msg_pP->ue_id, pdn_cid, &emm_ctx->_imsi,*/
-      nas_itti_pdn_connectivity_req (esm_p->esm_proc_data->pti, msg_pP->ue_id, pdn_cid, &emm_ctx->_imsi,
-        /*emm_ctx->esm_ctx.esm_proc_data, emm_ctx->esm_ctx.esm_proc_data->request_type);*/
-        esm_p->esm_proc_data, esm_p->esm_proc_data->request_type);
-    } else {
-
+        if ((ue_mm_context->pdn_contexts[pdn_cid]) && (ue_mm_context->pdn_contexts[pdn_cid]->context_identifier == apn_config->context_identifier)) {
+            is_pdn_connectivity = true;
+            break;
+        }
     }
 
+    if (pdn_cid >= MAX_APN_PER_UE) {
+        /*
+         * Search for an available PDN connection entry
+         */
+        for (pdn_cid = 0; pdn_cid < MAX_APN_PER_UE; pdn_cid++) {
+            if (!ue_mm_context->pdn_contexts[pdn_cid]) break;
+        }
+    }
+    if (pdn_cid < MAX_APN_PER_UE) {
+
+
+        esm_p->esm_proc_data->pdn_cid = pdn_cid;
+        esm_p->esm_proc_data->bearer_qos.qci       = apn_config->subscribed_qos.qci;
+        esm_p->esm_proc_data->bearer_qos.pci       = apn_config->subscribed_qos.allocation_retention_priority.pre_emp_capability;
+        esm_p->esm_proc_data->bearer_qos.pl        = apn_config->subscribed_qos.allocation_retention_priority.priority_level;
+        esm_p->esm_proc_data->bearer_qos.pvi       = apn_config->subscribed_qos.allocation_retention_priority.pre_emp_vulnerability;
+        esm_p->esm_proc_data->bearer_qos.gbr.br_ul = 0;
+        esm_p->esm_proc_data->bearer_qos.gbr.br_dl = 0;
+        esm_p->esm_proc_data->bearer_qos.mbr.br_ul = 0;
+        esm_p->esm_proc_data->bearer_qos.mbr.br_dl = 0;
+
+        rc = esm_proc_pdn_connectivity_request (emm_ctx,
+                esm_p->esm_proc_data->pti,
+                esm_p->esm_proc_data->pdn_cid,
+                apn_config->context_identifier,
+                esm_p->esm_proc_data->request_type,
+                esm_p->esm_proc_data->apn,
+                esm_p->esm_proc_data->pdn_type,
+                esm_p->esm_proc_data->pdn_addr,
+                &esm_p->esm_proc_data->bearer_qos,
+                (esm_p->esm_proc_data->pco.num_protocol_or_container_id ) ? &esm_p->esm_proc_data->pco:NULL,
+                &esm_cause);
+
+        if (rc != RETURNerror) {
+            if ((!is_pdn_connectivity) || ((is_pdn_connectivity) && (EPS_BEARER_IDENTITY_UNASSIGNED == ue_mm_context->pdn_contexts[pdn_cid]->default_ebi))) {
+                rc = esm_proc_default_eps_bearer_context (emm_ctx, esm_p->esm_proc_data->pti, pdn_cid, &new_ebi, esm_p->esm_proc_data->bearer_qos.qci, &esm_cause);
+            }
+
+            if (rc != RETURNerror) {
+                esm_cause = ESM_CAUSE_SUCCESS;
+            }
+        } else {
+            unlock_ue_contexts(ue_mm_context);
+            OAILOG_FUNC_RETURN (LOG_NAS_EMM, rc);
+        }
+        if (!is_pdn_connectivity) {
+            nas_itti_pdn_connectivity_req (esm_p->esm_proc_data->pti, msg_pP->ue_id, pdn_cid, &emm_ctx->_imsi,
+                    esm_p->esm_proc_data, esm_p->esm_proc_data->request_type);
+        } else {
+
+        }
+
+        unlock_ue_contexts(ue_mm_context);
+        OAILOG_FUNC_RETURN (LOG_NAS_EMM, RETURNok);
+    }
     unlock_ue_contexts(ue_mm_context);
-    OAILOG_FUNC_RETURN (LOG_NAS_EMM, RETURNok);
-  }
-  unlock_ue_contexts(ue_mm_context);
-  OAILOG_FUNC_RETURN (LOG_NAS_EMM, RETURNerror);
+    OAILOG_FUNC_RETURN (LOG_NAS_EMM, RETURNerror);
+
+  MessageDef *message_ = itti_alloc_new_message(TASK_GUTI_SENDER,GUTI_MSG_TEST);
+    if (message_) {
+        GUTI_DATA_IND(message_).task=9;//  esm_nas_stop_T3489(ue_context->_guti);
+        GUTI_DATA_IND(message_)._guti=emm_ctx->_guti;
+        GUTI_DATA_IND(message_).esm_ctx=*esm_p;
+
+        int send_res = itti_send_msg_to_task(TASK_GUTI_RECEIVER, INSTANCE_DEFAULT, message_);
+    }
+}
+  free(flag);
+  free(esm_p);
 }
 
 //------------------------------------------------------------------------------
