@@ -1,0 +1,7 @@
+2017年 12月 26日 星期二 16:28:10 CST
+前一次的修改是什么。。。。忘了
+
+这次的修改在于esm与emm将会分开跑在两个应用程序里，因而两者将无法访问彼此的内存地址。
+之前的版本对esm_context进行了，相应的分离操作。每当emm需要对esm_context进行操作时，会发送给esm ITTI message，esm收到信息后，会将对应的esm_context发给emm，emm对esm_context进行操作，如果esm_context进行了修改，则把修改的内容发送给esm，esm会对自己的数据库进行同样的修改。
+同事，esm_context具有一个esm_proc_data的成员，这个成员是一个指针，它指向的是一个calloc分配的内存，因此尽管在ITTI的信息传递中，可以正常的访问esm_proc_data成员，但如果esm与emm分离开来，那么就会导致程序访问非自身的内存地址，将会导致操作系统紊乱甚至是操作系统损坏的严重后果。
+此次对esm_proc_data的传递方式进行了修改，esm端使用原有的存储方法，而在emm端，在接受esm_proc_data时，会为其calloc一个合适的内存，并对内存进行赋值。进行操作修改之后，会把修改发送给esm，esm会对自己的数据库进行修改，同事emm对应的calloc内存会被释放掉。
