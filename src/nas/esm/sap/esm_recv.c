@@ -67,6 +67,7 @@
 #include "intertask_interface.h"
 #include "itti_free_defined_msg.h"
 
+#include "esm_proc.h"
 /****************************************************************************/
 /****************  E X T E R N A L    D E F I N I T I O N S  ****************/
 /****************************************************************************/
@@ -206,6 +207,7 @@ esm_recv_pdn_connectivity_request (
 
   struct esm_context_s * esm_p = calloc(1,sizeof( esm_context_t));//free there two pointers at the end of this function
   bool * flag=calloc(1,sizeof(bool));//flag==1 begin
+  struct esm_proc_data * proc= calloc(1,sizeof(esm_proc_data_t));
   *flag=0;
 
   MessageDef *message_p = itti_alloc_new_message(TASK_GUTI_SENDER,GUTI_MSG_TEST);
@@ -224,10 +226,19 @@ esm_recv_pdn_connectivity_request (
   /*struct esm_context_s * esm_p;//free there two pointers at the end of this function*/
   /*esm_get_inplace(emm_context->_guti,&esm_p);*/
 
-  if (!esm_p->esm_proc_data) {
-    esm_p->esm_proc_data  = (esm_proc_data_t *) calloc(1, sizeof(*esm_p->esm_proc_data));
+  *flag=0;
+  MessageDef *message = itti_alloc_new_message(TASK_GUTI_SENDER,GUTI_MSG_TEST);
+  if (message) {
+      GUTI_DATA_IND(message).task=10;//  esm_nas_stop_T3489(ue_context->_guti);
+      GUTI_DATA_IND(message)._guti=emm_context->_guti;
 
+      GUTI_DATA_IND(message).flag=flag;
+      GUTI_DATA_IND(message).esm_p=esm_p;
+
+      int send_res = itti_send_msg_to_task(TASK_GUTI_RECEIVER, INSTANCE_DEFAULT, message);
   }
+
+  while(*flag==0) ;
   MessageDef *message_ = itti_alloc_new_message(TASK_GUTI_SENDER,GUTI_MSG_TEST);
   if (message_) {
       GUTI_DATA_IND(message_).task=9;//  esm_nas_stop_T3489(ue_context->_guti);
@@ -236,6 +247,28 @@ esm_recv_pdn_connectivity_request (
 
       int send_res = itti_send_msg_to_task(TASK_GUTI_RECEIVER, INSTANCE_DEFAULT, message_);
   }
+  {
+      *flag=0;
+      MessageDef *message = itti_alloc_new_message(TASK_GUTI_SENDER,GUTI_MSG_TEST);
+      if (message) {
+          GUTI_DATA_IND(message).task=11;//  esm_nas_stop_T3489(ue_context->_guti);
+          GUTI_DATA_IND(message)._guti=emm_context->_guti;
+
+          GUTI_DATA_IND(message).flag=flag;
+
+          GUTI_DATA_IND(message).esm_proc_data=proc;
+          printf("proc:%p\n\n\n\n",proc);
+          int send_res = itti_send_msg_to_task(TASK_GUTI_RECEIVER, INSTANCE_DEFAULT, message);
+      }
+
+      while(*flag==0) ;
+
+  }
+
+
+
+  struct esm_proc_data_s *tmp= esm_p->esm_proc_data;
+  esm_p->esm_proc_data=proc;
   struct esm_proc_data_s * esm_data = esm_p->esm_proc_data;
 
   esm_data->pti = pti;
@@ -323,9 +356,28 @@ esm_recv_pdn_connectivity_request (
    * Return the ESM cause value
    */
 
+  {
+      *flag=0;
+      MessageDef *message = itti_alloc_new_message(TASK_GUTI_SENDER,GUTI_MSG_TEST);
+      if (message) {
+          GUTI_DATA_IND(message).task=12;//  esm_nas_stop_T3489(ue_context->_guti);
+          GUTI_DATA_IND(message)._guti=emm_context->_guti;
+
+          GUTI_DATA_IND(message).flag=flag;
+
+          GUTI_DATA_IND(message).esm_proc_data=proc;
+          GUTI_DATA_IND(message).proc=*esm_data;
+          printf("proc:%p\n\n\n\n",proc);
+          int send_res = itti_send_msg_to_task(TASK_GUTI_RECEIVER, INSTANCE_DEFAULT, message);
+      }
+
+      while(*flag==0) ;
+
+  }
   OAILOG_FUNC_RETURN (LOG_NAS_ESM, esm_cause);
   free(esm_p);
   free(flag);
+  free(proc);
 }
 
 /****************************************************************************
@@ -377,10 +429,9 @@ esm_recv_pdn_disconnect_request (
    * EPS bearer identity checking
    */
   else if (ebi != ESM_EBI_UNASSIGNED) {
-    /*
-     * 3GPP TS 24.301, section 7.3.2, case b
-     * * * * Reserved or assigned EPS bearer identity value
-     */
+     /** 3GPP TS 24.301, section 7.3.2, case b*/
+     /** * * * Reserved or assigned EPS bearer identity value*/
+
     OAILOG_WARNING (LOG_NAS_ESM, "ESM-SAP   - Invalid EPS bearer identity (ebi=%d)\n", ebi);
     OAILOG_FUNC_RETURN (LOG_NAS_ESM, ESM_CAUSE_INVALID_EPS_BEARER_IDENTITY);
   }
@@ -468,6 +519,7 @@ esm_cause_t esm_recv_information_response (
 
   struct esm_context_s * esm_p = calloc(1,sizeof( esm_context_t));//free there two pointers at the end of this function
   bool * flag=calloc(1,sizeof(bool));//flag==1 begin
+  struct esm_proc_data_s *proc= calloc(1,sizeof(esm_proc_data_t));
 
   *flag=0;
   MessageDef *message_p = itti_alloc_new_message(TASK_GUTI_SENDER,GUTI_MSG_TEST);
@@ -482,15 +534,54 @@ esm_cause_t esm_recv_information_response (
   }
 
   while(*flag==0) ;
+  {
+      *flag=0;
+      MessageDef *message = itti_alloc_new_message(TASK_GUTI_SENDER,GUTI_MSG_TEST);
+      if (message) {
+          GUTI_DATA_IND(message).task=11;//  esm_nas_stop_T3489(ue_context->_guti);
+          GUTI_DATA_IND(message)._guti=emm_context->_guti;
+
+          GUTI_DATA_IND(message).flag=flag;
+
+          GUTI_DATA_IND(message).esm_proc_data=proc;
+          printf("proc:%p\n\n\n\n",proc);
+          int send_res = itti_send_msg_to_task(TASK_GUTI_RECEIVER, INSTANCE_DEFAULT, message);
+      }
+
+      while(*flag==0) ;
+
+  }
+  struct esm_proc_data_s *tmp= esm_p->esm_proc_data;
+  esm_p->esm_proc_data=proc;
+  struct esm_proc_data_s * esm_data = esm_p->esm_proc_data;
     /*struct esm_context_s * esm_p;*/
     /*esm_get_inplace(emm_context->_guti,&esm_p);*/
     nas_itti_pdn_config_req(pti, ue_id, &emm_context->_imsi, esm_p->esm_proc_data, esm_p->esm_proc_data->request_type);
 
 
+  {
+      *flag=0;
+      MessageDef *message = itti_alloc_new_message(TASK_GUTI_SENDER,GUTI_MSG_TEST);
+      if (message) {
+          GUTI_DATA_IND(message).task=12;//  esm_nas_stop_T3489(ue_context->_guti);
+          GUTI_DATA_IND(message)._guti=emm_context->_guti;
+
+          GUTI_DATA_IND(message).flag=flag;
+
+          GUTI_DATA_IND(message).esm_proc_data=proc;
+          GUTI_DATA_IND(message).proc=*esm_data;
+          printf("proc:%p\n\n\n\n",proc);
+          int send_res = itti_send_msg_to_task(TASK_GUTI_RECEIVER, INSTANCE_DEFAULT, message);
+      }
+
+      while(*flag==0) ;
+
+  }
 
     esm_cause = ESM_CAUSE_SUCCESS;
     free(esm_p);
     free(flag);
+    free(proc);
   }
 
   /*

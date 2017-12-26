@@ -1,6 +1,7 @@
 #include "esm_sapDef.h"
 #include "bstrlib.h"
 #include "3gpp_23.003.h"
+#include "esm_proc.h"
 
 #define GUTI_DATA_IND(mSGpTR) (mSGpTR)->ittiMsg.guti_msg
 typedef struct guti_msg_s {
@@ -20,8 +21,8 @@ typedef struct guti_msg_s {
   esm_context_t *esm_p;
   esm_context_t esm_ctx;
 
-  struct esm_proc_data_s *esm_proc_data;
-
+  struct esm_proc_data_t *esm_proc_data;
+  struct esm_proc_data_s proc;
 } guti_msg_t;
 
 
@@ -32,11 +33,11 @@ typedef struct guti_rtn_s {
   proc_tid_t pti;
   esm_cause_t *esm_cause;
   emm_context_t * emm_context;
-
-
-
   bool* flag;
   esm_context_t *esm_p;
   esm_context_t esm_ctx;
+
+  struct esm_proc_data_t *esm_proc_data;
+  struct esm_proc_data_s proc;
 } guti_rtn_t;
 

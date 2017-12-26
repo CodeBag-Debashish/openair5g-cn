@@ -222,6 +222,8 @@ static int _emm_cn_pdn_config_res (emm_cn_pdn_config_res_t * msg_pP)
   }
 
   while(*flag==0) ;
+
+
   if(esm_p->esm_proc_data==NULL)
       ;
 else
