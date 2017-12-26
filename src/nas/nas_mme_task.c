@@ -238,7 +238,6 @@ static void *guti_msg_process (void *args_p)
                                     RTN_DATA_IND(message_p).emm_context=emm_context;
                                     int send_res = itti_send_msg_to_task(TASK_RTN_RECEIVER, INSTANCE_DEFAULT, message_p);
                                 }
-
                             } else {
                                 MessageDef *message_p = itti_alloc_new_message(TASK_RTN_SENDER,GUTI_RTN_TEST);
                                 if (message_p) {
@@ -249,6 +248,7 @@ static void *guti_msg_process (void *args_p)
                                     int send_res = itti_send_msg_to_task(TASK_RTN_RECEIVER, INSTANCE_DEFAULT, message_p);
                                 }
                             }
+
                         case 8:
                             ;
                             MessageDef *message_ = itti_alloc_new_message(TASK_RTN_SENDER,GUTI_RTN_TEST);
@@ -257,18 +257,15 @@ static void *guti_msg_process (void *args_p)
                                 RTN_DATA_IND(message_).esm_p=GUTI_DATA_IND(message_p).esm_p;
                                 RTN_DATA_IND(message_).flag=GUTI_DATA_IND(message_p).flag;
                                 RTN_DATA_IND(message_).esm_ctx=*esm_p;
-
                                 int send_res = itti_send_msg_to_task(TASK_RTN_RECEIVER, INSTANCE_DEFAULT, message_);
                             }
                             break;
 
-
                         case 9:
                             ;
-
                             /*esm_p->esm_proc_data=GUTI_DATA_IND(message_p).esm_proc_data;*/
-
                             break;
+
                         case 10:
                             ;
                             {
@@ -285,6 +282,7 @@ static void *guti_msg_process (void *args_p)
                                 }
                             }
                             break;
+
                         case 11:
                             ;
                             printf("task 11 begin\n");
@@ -294,8 +292,6 @@ static void *guti_msg_process (void *args_p)
                                     RTN_DATA_IND(message_).task=3;
                                     RTN_DATA_IND(message_).flag=GUTI_DATA_IND(message_p).flag;
                                     RTN_DATA_IND(message_).esm_proc_data=proc;
-                                    printf("GUTI message esm_proc_data:%p\n",RTN_DATA_IND(message_p).esm_proc_data);
-
                                     if(proc!=NULL)
                                     {
                                         RTN_DATA_IND(message_).proc=*proc;
@@ -310,13 +306,11 @@ static void *guti_msg_process (void *args_p)
                             ;
                             {
                                 MessageDef *message_ = itti_alloc_new_message(TASK_RTN_SENDER,GUTI_RTN_TEST);
-                                /*esm_p->esm_proc_data=GUTI_DATA_IND(message_p).esm_proc_data;*/
+                                esm_p->esm_proc_data=GUTI_DATA_IND(message_p).esm_proc_data;
                                 *(esm_p->esm_proc_data)=GUTI_DATA_IND(message_p).proc;
                                 if (message_) {
                                     RTN_DATA_IND(message_).task=4;
                                     RTN_DATA_IND(message_).flag=GUTI_DATA_IND(message_p).flag;
-                                    RTN_DATA_IND(message_).esm_proc_data=proc;
-                                    printf("GUTI message esm_proc_data:%p\n",RTN_DATA_IND(message_p).esm_proc_data);
 
                                     if(proc!=NULL)
                                     {
