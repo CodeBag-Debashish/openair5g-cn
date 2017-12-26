@@ -186,135 +186,193 @@ static int _emm_cn_deregister_ue (const mme_ue_s1ap_id_t ue_id)
 //------------------------------------------------------------------------------
 static int _emm_cn_pdn_config_res (emm_cn_pdn_config_res_t * msg_pP)
 {
-  OAILOG_FUNC_IN (LOG_NAS_EMM);
-  int                                     rc = RETURNerror;
-  struct emm_context_s                   *emm_ctx = NULL;
-  esm_cause_t                             esm_cause = ESM_CAUSE_SUCCESS;
-  pdn_cid_t                               pdn_cid = 0;
-  ebi_t                                   new_ebi = 0;
-  bool                                    is_pdn_connectivity = false;
+    OAILOG_FUNC_IN (LOG_NAS_EMM);
+    int                                     rc = RETURNerror;
+    struct emm_context_s                   *emm_ctx = NULL;
+    esm_cause_t                             esm_cause = ESM_CAUSE_SUCCESS;
+    pdn_cid_t                               pdn_cid = 0;
+    ebi_t                                   new_ebi = 0;
+    bool                                    is_pdn_connectivity = false;
 
-  ue_mm_context_t *ue_mm_context = mme_ue_context_exists_mme_ue_s1ap_id (&mme_app_desc.mme_ue_contexts, msg_pP->ue_id);
+    ue_mm_context_t *ue_mm_context = mme_ue_context_exists_mme_ue_s1ap_id (&mme_app_desc.mme_ue_contexts, msg_pP->ue_id);
 
-  if (ue_mm_context) {
-    emm_ctx = &ue_mm_context->emm_context;
-  }
-
-  if (emm_ctx == NULL) {
-    OAILOG_ERROR (LOG_NAS_EMM, "EMMCN-SAP  - " "Failed to find UE associated to id " MME_UE_S1AP_ID_FMT "...\n", msg_pP->ue_id);
-    OAILOG_FUNC_RETURN (LOG_NAS_EMM, rc);
-  }
-
-
-  struct esm_context_s * esm_p = calloc(1,sizeof( esm_context_t));//free there two pointers at the end of this function
-  bool * flag=calloc(1,sizeof(bool));//flag==1 begin
-  *flag=0;
-
-  MessageDef *message_p = itti_alloc_new_message(TASK_GUTI_SENDER,GUTI_MSG_TEST);
-  if (message_p) {
-      GUTI_DATA_IND(message_p).task=8;//  esm_nas_stop_T3489(ue_context->_guti);
-      GUTI_DATA_IND(message_p)._guti=emm_ctx->_guti;
-
-      GUTI_DATA_IND(message_p).flag=flag;
-      GUTI_DATA_IND(message_p).esm_p=esm_p;
-
-      int send_res = itti_send_msg_to_task(TASK_GUTI_RECEIVER, INSTANCE_DEFAULT, message_p);
-  }
-
-  while(*flag==0) ;
-
-
-  if(esm_p->esm_proc_data==NULL)
-      ;
-else
-{
-    struct apn_configuration_s* apn_config = mme_app_select_apn(ue_mm_context, esm_p->esm_proc_data->apn);
-
-    if (!apn_config) {
-        /*
-         * Unfortunately we didn't find our default APN...
-         */
-        OAILOG_INFO (LOG_NAS_ESM, "No suitable APN found ue_id=" MME_UE_S1AP_ID_FMT ")\n",ue_mm_context->mme_ue_s1ap_id);
-        return RETURNerror;
+    if (ue_mm_context) {
+        emm_ctx = &ue_mm_context->emm_context;
     }
 
-    // search for an already set PDN context
-    for (pdn_cid = 0; pdn_cid < MAX_APN_PER_UE; pdn_cid++) {
-        if ((ue_mm_context->pdn_contexts[pdn_cid]) && (ue_mm_context->pdn_contexts[pdn_cid]->context_identifier == apn_config->context_identifier)) {
-            is_pdn_connectivity = true;
-            break;
-        }
+    if (emm_ctx == NULL) {
+        OAILOG_ERROR (LOG_NAS_EMM, "EMMCN-SAP  - " "Failed to find UE associated to id " MME_UE_S1AP_ID_FMT "...\n", msg_pP->ue_id);
+        OAILOG_FUNC_RETURN (LOG_NAS_EMM, rc);
     }
 
-    if (pdn_cid >= MAX_APN_PER_UE) {
-        /*
-         * Search for an available PDN connection entry
-         */
-        for (pdn_cid = 0; pdn_cid < MAX_APN_PER_UE; pdn_cid++) {
-            if (!ue_mm_context->pdn_contexts[pdn_cid]) break;
-        }
+
+    struct esm_context_s * esm_p = calloc(1,sizeof( esm_context_t));//free there two pointers at the end of this function
+    bool * flag=calloc(1,sizeof(bool));//flag==1 begin
+
+    *flag=0;
+
+    MessageDef *message_p = itti_alloc_new_message(TASK_GUTI_SENDER,GUTI_MSG_TEST);
+    if (message_p) {
+        GUTI_DATA_IND(message_p).task=8;//  esm_nas_stop_T3489(ue_context->_guti);
+        GUTI_DATA_IND(message_p)._guti=emm_ctx->_guti;
+
+        GUTI_DATA_IND(message_p).flag=flag;
+        GUTI_DATA_IND(message_p).esm_p=esm_p;
+
+        int send_res = itti_send_msg_to_task(TASK_GUTI_RECEIVER, INSTANCE_DEFAULT, message_p);
     }
-    if (pdn_cid < MAX_APN_PER_UE) {
+
+    while(*flag==0) ;
 
 
-        esm_p->esm_proc_data->pdn_cid = pdn_cid;
-        esm_p->esm_proc_data->bearer_qos.qci       = apn_config->subscribed_qos.qci;
-        esm_p->esm_proc_data->bearer_qos.pci       = apn_config->subscribed_qos.allocation_retention_priority.pre_emp_capability;
-        esm_p->esm_proc_data->bearer_qos.pl        = apn_config->subscribed_qos.allocation_retention_priority.priority_level;
-        esm_p->esm_proc_data->bearer_qos.pvi       = apn_config->subscribed_qos.allocation_retention_priority.pre_emp_vulnerability;
-        esm_p->esm_proc_data->bearer_qos.gbr.br_ul = 0;
-        esm_p->esm_proc_data->bearer_qos.gbr.br_dl = 0;
-        esm_p->esm_proc_data->bearer_qos.mbr.br_ul = 0;
-        esm_p->esm_proc_data->bearer_qos.mbr.br_dl = 0;
+    if(esm_p->esm_proc_data==NULL)
+        ;
+    else
+    {
+        struct esm_proc_data_s *proc= calloc(1,sizeof(esm_proc_data_t));
 
-        rc = esm_proc_pdn_connectivity_request (emm_ctx,
-                esm_p->esm_proc_data->pti,
-                esm_p->esm_proc_data->pdn_cid,
-                apn_config->context_identifier,
-                esm_p->esm_proc_data->request_type,
-                esm_p->esm_proc_data->apn,
-                esm_p->esm_proc_data->pdn_type,
-                esm_p->esm_proc_data->pdn_addr,
-                &esm_p->esm_proc_data->bearer_qos,
-                (esm_p->esm_proc_data->pco.num_protocol_or_container_id ) ? &esm_p->esm_proc_data->pco:NULL,
-                &esm_cause);
+        {
+            *flag=0;
+            MessageDef *message = itti_alloc_new_message(TASK_GUTI_SENDER,GUTI_MSG_TEST);
+            if (message) {
+                GUTI_DATA_IND(message).task=11;//  esm_nas_stop_T3489(ue_context->_guti);
+                GUTI_DATA_IND(message)._guti=emm_ctx->_guti;
 
-        if (rc != RETURNerror) {
-            if ((!is_pdn_connectivity) || ((is_pdn_connectivity) && (EPS_BEARER_IDENTITY_UNASSIGNED == ue_mm_context->pdn_contexts[pdn_cid]->default_ebi))) {
-                rc = esm_proc_default_eps_bearer_context (emm_ctx, esm_p->esm_proc_data->pti, pdn_cid, &new_ebi, esm_p->esm_proc_data->bearer_qos.qci, &esm_cause);
+                GUTI_DATA_IND(message).flag=flag;
+
+                GUTI_DATA_IND(message).esm_proc_data=proc;
+                /*printf("\n\n\n\n\n\n0proc:%p\n\n\n\n",proc);*/
+                int send_res = itti_send_msg_to_task(TASK_GUTI_RECEIVER, INSTANCE_DEFAULT, message);
+
             }
+
+            while(*flag==0) ;
+
+        }
+
+        struct esm_proc_data_s *tmp= esm_p->esm_proc_data;
+        /**proc=*tmp;*/
+        /*if(memcmp(tmp,proc,sizeof(esm_proc_data_t))==0)*/
+        /*{*/
+            /*printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nsame\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");*/
+        /*}else*/
+        /*{*/
+            /*printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nnot same\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");*/
+        /*}*/
+        esm_p->esm_proc_data=proc;
+
+
+        struct apn_configuration_s* apn_config = mme_app_select_apn(ue_mm_context, esm_p->esm_proc_data->apn);
+
+        if (!apn_config) {
+            /*
+             * Unfortunately we didn't find our default APN...
+             */
+            OAILOG_INFO (LOG_NAS_ESM, "No suitable APN found ue_id=" MME_UE_S1AP_ID_FMT ")\n",ue_mm_context->mme_ue_s1ap_id);
+            return RETURNerror;
+        }
+
+        // search for an already set PDN context
+        for (pdn_cid = 0; pdn_cid < MAX_APN_PER_UE; pdn_cid++) {
+            if ((ue_mm_context->pdn_contexts[pdn_cid]) && (ue_mm_context->pdn_contexts[pdn_cid]->context_identifier == apn_config->context_identifier)) {
+                is_pdn_connectivity = true;
+                break;
+            }
+        }
+
+        if (pdn_cid >= MAX_APN_PER_UE) {
+            /*
+             * Search for an available PDN connection entry
+             */
+            for (pdn_cid = 0; pdn_cid < MAX_APN_PER_UE; pdn_cid++) {
+                if (!ue_mm_context->pdn_contexts[pdn_cid]) break;
+            }
+        }
+        if (pdn_cid < MAX_APN_PER_UE) {
+
+
+            esm_p->esm_proc_data->pdn_cid = pdn_cid;
+            esm_p->esm_proc_data->bearer_qos.qci       = apn_config->subscribed_qos.qci;
+            esm_p->esm_proc_data->bearer_qos.pci       = apn_config->subscribed_qos.allocation_retention_priority.pre_emp_capability;
+            esm_p->esm_proc_data->bearer_qos.pl        = apn_config->subscribed_qos.allocation_retention_priority.priority_level;
+            esm_p->esm_proc_data->bearer_qos.pvi       = apn_config->subscribed_qos.allocation_retention_priority.pre_emp_vulnerability;
+            esm_p->esm_proc_data->bearer_qos.gbr.br_ul = 0;
+            esm_p->esm_proc_data->bearer_qos.gbr.br_dl = 0;
+            esm_p->esm_proc_data->bearer_qos.mbr.br_ul = 0;
+            esm_p->esm_proc_data->bearer_qos.mbr.br_dl = 0;
+
+            rc = esm_proc_pdn_connectivity_request (emm_ctx,
+                    esm_p->esm_proc_data->pti,
+                    esm_p->esm_proc_data->pdn_cid,
+                    apn_config->context_identifier,
+                    esm_p->esm_proc_data->request_type,
+                    esm_p->esm_proc_data->apn,
+                    esm_p->esm_proc_data->pdn_type,
+                    esm_p->esm_proc_data->pdn_addr,
+                    &esm_p->esm_proc_data->bearer_qos,
+                    (esm_p->esm_proc_data->pco.num_protocol_or_container_id ) ? &esm_p->esm_proc_data->pco:NULL,
+                    &esm_cause);
 
             if (rc != RETURNerror) {
-                esm_cause = ESM_CAUSE_SUCCESS;
+                if ((!is_pdn_connectivity) || ((is_pdn_connectivity) && (EPS_BEARER_IDENTITY_UNASSIGNED == ue_mm_context->pdn_contexts[pdn_cid]->default_ebi))) {
+                    rc = esm_proc_default_eps_bearer_context (emm_ctx, esm_p->esm_proc_data->pti, pdn_cid, &new_ebi, esm_p->esm_proc_data->bearer_qos.qci, &esm_cause);
+                }
+
+                if (rc != RETURNerror) {
+                    esm_cause = ESM_CAUSE_SUCCESS;
+                }
+            } else {
+                unlock_ue_contexts(ue_mm_context);
+                OAILOG_FUNC_RETURN (LOG_NAS_EMM, rc);
             }
-        } else {
+            if (!is_pdn_connectivity) {
+                nas_itti_pdn_connectivity_req (esm_p->esm_proc_data->pti, msg_pP->ue_id, pdn_cid, &emm_ctx->_imsi,
+                        esm_p->esm_proc_data, esm_p->esm_proc_data->request_type);
+            } else {
+
+            }
+
             unlock_ue_contexts(ue_mm_context);
-            OAILOG_FUNC_RETURN (LOG_NAS_EMM, rc);
+            OAILOG_FUNC_RETURN (LOG_NAS_EMM, RETURNok);
         }
-        if (!is_pdn_connectivity) {
-            nas_itti_pdn_connectivity_req (esm_p->esm_proc_data->pti, msg_pP->ue_id, pdn_cid, &emm_ctx->_imsi,
-                    esm_p->esm_proc_data, esm_p->esm_proc_data->request_type);
-        } else {
-
-        }
-
         unlock_ue_contexts(ue_mm_context);
-        OAILOG_FUNC_RETURN (LOG_NAS_EMM, RETURNok);
-    }
-    unlock_ue_contexts(ue_mm_context);
-    OAILOG_FUNC_RETURN (LOG_NAS_EMM, RETURNerror);
+        OAILOG_FUNC_RETURN (LOG_NAS_EMM, RETURNerror);
 
-  MessageDef *message_ = itti_alloc_new_message(TASK_GUTI_SENDER,GUTI_MSG_TEST);
-    if (message_) {
-        GUTI_DATA_IND(message_).task=9;//  esm_nas_stop_T3489(ue_context->_guti);
-        GUTI_DATA_IND(message_)._guti=emm_ctx->_guti;
-        GUTI_DATA_IND(message_).esm_ctx=*esm_p;
+        MessageDef *message_ = itti_alloc_new_message(TASK_GUTI_SENDER,GUTI_MSG_TEST);
+        if (message_) {
+            GUTI_DATA_IND(message_).task=9;//  esm_nas_stop_T3489(ue_context->_guti);
+            GUTI_DATA_IND(message_)._guti=emm_ctx->_guti;
+            GUTI_DATA_IND(message_).esm_ctx=*esm_p;
 
-        int send_res = itti_send_msg_to_task(TASK_GUTI_RECEIVER, INSTANCE_DEFAULT, message_);
+            int send_res = itti_send_msg_to_task(TASK_GUTI_RECEIVER, INSTANCE_DEFAULT, message_);
+        }
+
+
+
+        esm_p->esm_proc_data=tmp;
+        {
+            *flag=0;
+            MessageDef *message = itti_alloc_new_message(TASK_GUTI_SENDER,GUTI_MSG_TEST);
+            if (message) {
+                GUTI_DATA_IND(message).task=12;//  esm_nas_stop_T3489(ue_context->_guti);
+                GUTI_DATA_IND(message)._guti=emm_ctx->_guti;
+
+                GUTI_DATA_IND(message).flag=flag;
+
+                GUTI_DATA_IND(message).esm_proc_data=tmp;
+                GUTI_DATA_IND(message).proc=*esm_p->esm_proc_data;
+                /*printf("proc:%p\n\n\n\n",proc);*/
+                int send_res = itti_send_msg_to_task(TASK_GUTI_RECEIVER, INSTANCE_DEFAULT, message);
+            }
+
+            while(*flag==0) ;
+
+        }
+
+        free(proc);
     }
-}
-  free(flag);
-  free(esm_p);
+    free(flag);
+    free(esm_p);
 }
 
 //------------------------------------------------------------------------------

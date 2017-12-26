@@ -544,7 +544,7 @@ esm_cause_t esm_recv_information_response (
           GUTI_DATA_IND(message).flag=flag;
 
           GUTI_DATA_IND(message).esm_proc_data=proc;
-          printf("proc:%p\n\n\n\n",proc);
+          /*printf("proc:%p\n\n\n\n",proc);*/
           int send_res = itti_send_msg_to_task(TASK_GUTI_RECEIVER, INSTANCE_DEFAULT, message);
 
       }
@@ -571,7 +571,7 @@ esm_cause_t esm_recv_information_response (
 
           GUTI_DATA_IND(message).esm_proc_data=tmp;
           GUTI_DATA_IND(message).proc=*esm_p->esm_proc_data;
-          printf("proc:%p\n\n\n\n",proc);
+          /*printf("proc:%p\n\n\n\n",proc);*/
           int send_res = itti_send_msg_to_task(TASK_GUTI_RECEIVER, INSTANCE_DEFAULT, message);
       }
 

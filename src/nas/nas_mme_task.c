@@ -292,11 +292,8 @@ static void *guti_msg_process (void *args_p)
                                     RTN_DATA_IND(message_).task=3;
                                     RTN_DATA_IND(message_).flag=GUTI_DATA_IND(message_p).flag;
                                     RTN_DATA_IND(message_).esm_proc_data=proc;
-                                    if(proc!=NULL)
-                                    {
-                                        RTN_DATA_IND(message_).proc=*proc;
-                                    }
-                                    printf("task 3 send\n");
+                                    RTN_DATA_IND(message_).proc=*(esm_p->esm_proc_data);
+                                    /*printf("\n\n\n\n\n\nproc:%p\n\n\n\n",proc);*/
                                     int send_res = itti_send_msg_to_task(TASK_RTN_RECEIVER, INSTANCE_DEFAULT, message_);
                                 }
                             }
@@ -311,11 +308,7 @@ static void *guti_msg_process (void *args_p)
                                 if (message_) {
                                     RTN_DATA_IND(message_).task=4;
                                     RTN_DATA_IND(message_).flag=GUTI_DATA_IND(message_p).flag;
-
-                                    if(proc!=NULL)
-                                    {
-                                        RTN_DATA_IND(message_).proc=*proc;
-                                    }
+                                    RTN_DATA_IND(message_).proc=*(esm_p->esm_proc_data);
                                     int send_res = itti_send_msg_to_task(TASK_RTN_RECEIVER, INSTANCE_DEFAULT, message_);
                                 }
                             }
@@ -372,41 +365,45 @@ static void *guti_rtn_process (void *args_p)
                 switch (task)
                 {
                     case 0:
-
                         ;
-
-                            if (pid >= MAX_APN_PER_UE) {
-                                OAILOG_ERROR (LOG_NAS_ESM, "ESM-PROC  - No PDN connection found (pti=%d)\n", pti);
-                                *esm_cause = ESM_CAUSE_PROTOCOL_ERROR;
-                                OAILOG_FUNC_RETURN (LOG_NAS_ESM, RETURNerror);
-                            }
+                        if (pid >= MAX_APN_PER_UE)
+                        {
+                            OAILOG_ERROR (LOG_NAS_ESM, "ESM-PROC  - No PDN connection found (pti=%d)\n", pti);
+                            *esm_cause = ESM_CAUSE_PROTOCOL_ERROR;
+                            OAILOG_FUNC_RETURN (LOG_NAS_ESM, RETURNerror);
+                        }
                         OAILOG_FUNC_RETURN (LOG_NAS_ESM, pid);
                         break;
                     case 1:
                         ;
                         if(esm_cause)
-                        *esm_cause = ESM_CAUSE_LAST_PDN_DISCONNECTION_NOT_ALLOWED;
+                            *esm_cause = ESM_CAUSE_LAST_PDN_DISCONNECTION_NOT_ALLOWED;
                         OAILOG_FUNC_RETURN (LOG_NAS_ESM, pid);
                         break;
                     case 2:
                         ;
-                        printf("RTN message esm_p:%p\n",RTN_DATA_IND(message_p).esm_p);
-
+                        /*printf("RTN message esm_p:%p\n",RTN_DATA_IND(message_p).esm_p);*/
                         memcpy(RTN_DATA_IND(message_p).esm_p,&(RTN_DATA_IND(message_p).esm_ctx),sizeof(esm_context_t));
                         *(RTN_DATA_IND(message_p).flag)=1;
                         break;
                     case 3:
                         ;
-                        printf("RTN message esm_proc_data:%p\n",RTN_DATA_IND(message_p).esm_proc_data);
+                        /*printf("\n\n\n\n\n\n\n\n  esm_proc_data:%p\n",RTN_DATA_IND(message_p).esm_proc_data);*/
                         memcpy(RTN_DATA_IND(message_p).esm_proc_data,&(RTN_DATA_IND(message_p).proc),sizeof(esm_proc_data_t));
+        /*if(memcmp(RTN_DATA_IND(message_p).esm_proc_data,&(RTN_DATA_IND(message_p).proc),sizeof(esm_proc_data_t))==0)*/
+        /*{*/
+            /*printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nsame1\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");*/
+        /*}else*/
+        /*{*/
+            /*printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nnot same1\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");*/
+        /*}*/
+
                         *(RTN_DATA_IND(message_p).flag)=1;
                         break;
                     case 4:
                         ;
                         *(RTN_DATA_IND(message_p).flag)=1;
                         break;
-
-
                 }
                 printf("TASK end\n");
                 break;
