@@ -390,13 +390,13 @@ static void *guti_rtn_process (void *args_p)
                         ;
                         /*printf("\n\n\n\n\n\n\n\n  esm_proc_data:%p\n",RTN_DATA_IND(message_p).esm_proc_data);*/
                         memcpy(RTN_DATA_IND(message_p).esm_proc_data,&(RTN_DATA_IND(message_p).proc),sizeof(esm_proc_data_t));
-        /*if(memcmp(RTN_DATA_IND(message_p).esm_proc_data,&(RTN_DATA_IND(message_p).proc),sizeof(esm_proc_data_t))==0)*/
-        /*{*/
-            /*printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nsame1\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");*/
-        /*}else*/
-        /*{*/
-            /*printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nnot same1\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");*/
-        /*}*/
+        if(memcmp(RTN_DATA_IND(message_p).esm_proc_data,&(RTN_DATA_IND(message_p).proc),sizeof(esm_proc_data_t))==0)
+        {
+            printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nsame1\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+        }else
+        {
+            printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nnot same1\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+        }
 
                         *(RTN_DATA_IND(message_p).flag)=1;
                         break;
@@ -440,6 +440,14 @@ int nas_init (mme_config_t * mme_config_p)
     OAILOG_ERROR (LOG_NAS, "guti_rtn_receiver esm sap create task failed\n");
     OAILOG_FUNC_RETURN (LOG_NAS, RETURNerror);
     }
+  /*不加nghttp2时的运行点测试*/
+  printf("running successfully!!!");
+
+  /*libevent-server测试点 需要添加头文件  libevent-server.h(此文件见附带demo)*/
+  Server();//nghttp2服务端运行（测试客户端的时候注释）
+
+  //libevent-client测试点 需要添加头文件  libevent-client.h(见demo)
+  //Client();//nghttp2客户端运行 （测试服务器的时候注释）
 
   if(0)
   {
